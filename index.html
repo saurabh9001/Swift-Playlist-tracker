@@ -5,6 +5,26 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Swift Learning Journey</title>
     <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Firebase App (the core Firebase SDK) -->
+    <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+    <!-- Add Firebase products you want to use -->
+    <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
+    <!-- TODO: Add more Firebase SDKs as needed -->
+    <script>
+      const firebaseConfig = {
+        apiKey: "AIzaSyC_qKkryDOurbuxus53IKD-LZTFTwOcyiA",
+        authDomain: "swift-57396.firebaseapp.com",
+        projectId: "swift-57396",
+        storageBucket: "swift-57396.firebasestorage.app",
+        messagingSenderId: "637513218600",
+        appId: "1:637513218600:web:094f56395070fde52c131d",
+        measurementId: "G-3GY7240XCR"
+      };
+      // Initialize Firebase
+      firebase.initializeApp(firebaseConfig);
+      // Now you can use firebase.auth(), firebase.firestore(), etc.
+    </script>
     <style>
         @keyframes wave1 {
             0% { transform: translateX(0) translateY(0); }
@@ -1232,5 +1252,78 @@
         // Initialize the app when DOM is loaded
         document.addEventListener('DOMContentLoaded', initApp);
     </script>
+</body>
+  <script>
+    // Generate or retrieve device ID
+    function getDeviceId() {
+      let id = localStorage.getItem('deviceId');
+      if (!id) {
+        id = 'device-' + Math.random().toString(36).substr(2, 16);
+        localStorage.setItem('deviceId', id);
+      }
+      return id;
+    }
+
+    // Get Firestore reference
+    const db = firebase.firestore();
+    const deviceId = getDeviceId();
+    const stateDocRef = db.collection('tutorials_state').doc(deviceId);
+
+    // Save state to Firestore and localStorage
+    function saveTutorialState() {
+      const checkboxes = document.querySelectorAll('.tutorial-checkbox');
+      const state = {};
+      checkboxes.forEach(cb => {
+        state[cb.dataset.tutorialId] = cb.checked;
+      });
+      // Save to Firestore
+      stateDocRef.set(state).catch(err => {
+        console.warn('Could not save to Firestore:', err);
+      });
+      // Save to localStorage
+      localStorage.setItem('tutorialState', JSON.stringify(state));
+    }
+
+    // Load state from Firestore, fallback to localStorage
+    function loadTutorialState() {
+      stateDocRef.get().then(doc => {
+        if (doc.exists) {
+          applyTutorialState(doc.data());
+        } else {
+          loadTutorialStateFromLocal();
+        }
+      }).catch(err => {
+        console.warn('Could not load from Firestore:', err);
+        loadTutorialStateFromLocal();
+      });
+    }
+
+    function loadTutorialStateFromLocal() {
+      const stateStr = localStorage.getItem('tutorialState');
+      if (stateStr) {
+        try {
+          const state = JSON.parse(stateStr);
+          applyTutorialState(state);
+        } catch {}
+      }
+    }
+
+    function applyTutorialState(state) {
+      const checkboxes = document.querySelectorAll('.tutorial-checkbox');
+      checkboxes.forEach(cb => {
+        if (state.hasOwnProperty(cb.dataset.tutorialId)) {
+          cb.checked = !!state[cb.dataset.tutorialId];
+        }
+      });
+    }
+
+    // Attach listeners after DOMContentLoaded
+    document.addEventListener('DOMContentLoaded', function() {
+      loadTutorialState();
+      document.querySelectorAll('.tutorial-checkbox').forEach(cb => {
+        cb.addEventListener('change', saveTutorialState);
+      });
+    });
+  </script>
 </body>
 </html>
