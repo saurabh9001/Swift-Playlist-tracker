@@ -131,7 +131,14 @@
     </div>
 
     <div class="container mx-auto px-4 py-8 max-w-4xl">
-    <button id="test-firestore-btn" class="mb-4 px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded shadow">Test Firestore Write</button>
+        <!-- Authentication buttons -->
+        <div class="flex justify-end mb-4">
+            <button id="google-signin-btn" class="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded shadow">Sign in with Google</button>
+            <button id="signout-btn" class="ml-2 px-4 py-2 bg-gray-600 hover:bg-gray-700 text-white rounded shadow hidden">Sign out</button>
+        </div>
+        
+        <!-- Optional Firestore test button -->
+        <button id="test-firestore-btn" class="mb-4 px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded shadow">Test Firestore Write</button>
 <script>
   document.getElementById('test-firestore-btn').addEventListener('click', function() {
     db.collection('tutorials_state').doc('test_button_trial').set({
@@ -718,6 +725,7 @@
 
         // State management
         let tutorialState = {};
+        let handlersReady = false;
         let currentUntickTutorial = null;
         let longPressTimer = null;
 
@@ -1304,7 +1312,7 @@ const completed = Object.values(tutorialState).filter(t => t.completed).length;
         });
 
         // Initialize the app when DOM is loaded
-        document.addEventListener('DOMContentLoaded', initApp);
+        // initApp will be triggered after authentication
     </script>
 </body>
   <script>
@@ -1318,13 +1326,50 @@ const completed = Object.values(tutorialState).filter(t => t.completed).length;
       return id;
     }
     const db = firebase.firestore();
-    const deviceId = getDeviceId();
-    const stateDocRef = db.collection('tutorials_state').doc(deviceId);
+    // We'll choose the correct Firestore document once we know who the user is.
+    let stateDocRef = null;
 
 
-    // Save state to Firestore and localStorage
-
-    // ... (rest of the code remains the same)
+    // ----------------------- Firebase Authentication & Cross-device Sync -----------------------
+    const auth = firebase.auth();
+    const provider = new firebase.auth.GoogleAuthProvider();
+    
+    const signInBtn = document.getElementById('google-signin-btn');
+    const signOutBtn = document.getElementById('signout-btn');
+    
+    signInBtn.addEventListener('click', () => {
+      auth.signInWithPopup(provider).catch(err => console.error('Google sign-in error:', err));
+    });
+    
+    signOutBtn.addEventListener('click', () => auth.signOut());
+    
+    auth.onAuthStateChanged(user => {
+      // Determine which document to use
+      if (user) {
+        console.log('Signed in as', user.email);
+        signInBtn.classList.add('hidden');
+        signOutBtn.classList.remove('hidden');
+        stateDocRef = db.collection('tutorials_state').doc(user.uid);
+      } else {
+        console.log('Not signed in – using device-scoped document');
+        signInBtn.classList.remove('hidden');
+        signOutBtn.classList.add('hidden');
+        const deviceId = getDeviceId();
+        stateDocRef = db.collection('tutorials_state').doc(deviceId);
+      }
+      
+      // Ensure event handlers only set up once
+      if (!handlersReady) {
+        setupEventHandlers();
+        handlersReady = true;
+      }
+      
+      // Load current state and refresh UI
+      loadState();
+      renderTutorialList();
+      updateProgress();
+    });
+    // ------------------------------------------------------------------------
     function loadTutorialStateFromLocal() {
       const stateStr = localStorage.getItem('tutorialState');
       if (stateStr) {
@@ -1389,9 +1434,7 @@ const completed = Object.values(tutorialState).filter(t => t.completed).length;
       });
     }
 
-    document.addEventListener('DOMContentLoaded', function() {
-      loadTutorialState();
-    });
+    // Removed – state is loaded after authentication
     // --- End Firebase Firestore Sync & State Functions ---
   </script>
 </body>
