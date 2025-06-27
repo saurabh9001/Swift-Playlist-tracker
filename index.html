@@ -138,12 +138,10 @@
 
     <div class="container mx-auto px-4 py-8 max-w-4xl">
         <!-- Authentication buttons -->
-        <div class="flex justify-end mb-4">
+        <div class="flex justify-end mb-6">
             <button id="google-signin-btn" class="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded shadow">Sign in with Google</button>
             <button id="signout-btn" class="ml-2 px-4 py-2 bg-gray-600 hover:bg-gray-700 text-white rounded shadow hidden">Sign out</button>
         </div>
-        
-
         <!-- Header -->
         <div class="glass-card rounded-3xl shadow-lg mb-6 overflow-hidden">
             <div class="bg-gradient-to-r from-blue-500/20 to-pink-500/20 p-6">
@@ -1336,43 +1334,31 @@ const completed = Object.values(tutorialState).filter(t => t.completed).length;
     
     signOutBtn.addEventListener('click', () => auth.signOut());
     
-    // Function to update UI based on auth state
-    function updateAuthUI(user) {
+    auth.onAuthStateChanged(user => {
+      // Determine which document to use
       if (user) {
         console.log('Signed in as', user.email);
         signInBtn.classList.add('hidden');
         signOutBtn.classList.remove('hidden');
         stateDocRef = db.collection('tutorials_state').doc(user.uid);
-        
-        // Load state and update UI
-        loadState().then(() => {
-          renderTutorialList();
-          updateProgress();
-        });
       } else {
         console.log('Not signed in – using device-scoped document');
         signInBtn.classList.remove('hidden');
         signOutBtn.classList.add('hidden');
         const deviceId = getDeviceId();
         stateDocRef = db.collection('tutorials_state').doc(deviceId);
-        
-        // Load state and update UI
-        loadState().then(() => {
-          renderTutorialList();
-          updateProgress();
-        });
       }
-    }
-    
-    // Set up auth state listener and initialize
-    auth.onAuthStateChanged(user => {
-      updateAuthUI(user);
       
       // Ensure event handlers only set up once
       if (!handlersReady) {
         setupEventHandlers();
         handlersReady = true;
       }
+      
+      // Load current state and refresh UI
+      loadState();
+      renderTutorialList();
+      updateProgress();
     });
     // ------------------------------------------------------------------------
     function loadTutorialStateFromLocal() {
