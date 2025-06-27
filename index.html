@@ -729,13 +729,19 @@
             setupEventHandlers();
         }
 
-        // Load state from localStorage
+        // Load state from localStorage first, then try Firestore
         function loadState() {
             const savedState = localStorage.getItem('swiftCheckersState');
             if (savedState) {
-                tutorialState = JSON.parse(savedState);
-            } else {
-                // Initialize default state
+                try {
+                    tutorialState = JSON.parse(savedState);
+                } catch (e) {
+                    tutorialState = {};
+                }
+            }
+
+            // Initialize default state if nothing was loaded
+            if (Object.keys(tutorialState).length === 0) {
                 tutorials.forEach(tutorial => {
                     tutorialState[tutorial.id] = {
                         completed: false,
@@ -743,11 +749,35 @@
                     };
                 });
             }
+
+            // Attempt to fetch server state and overwrite if newer
+            if (typeof stateDocRef !== 'undefined') {
+                stateDocRef.get().then(doc => {
+                    if (doc.exists) {
+                        tutorialState = doc.data() || {};
+                        // Store a local copy so we stay in sync offline
+                        localStorage.setItem('swiftCheckersState', JSON.stringify(tutorialState));
+                        // Re-render UI with cloud state
+                        renderTutorialList();
+                        updateProgress();
+                    }
+                }).catch(err => {
+                    console.warn('Could not load from Firestore:', err);
+                });
+            }
         }
 
-        // Save state to localStorage
+        // Save state to localStorage AND Firestore (if available)
         function saveState() {
+            // Persist locally for offline support
             localStorage.setItem('swiftCheckersState', JSON.stringify(tutorialState));
+
+            // Persist remotely for cross-device sync
+            if (typeof stateDocRef !== 'undefined') {
+                stateDocRef.set(tutorialState).catch(err => {
+                    console.warn('Could not save to Firestore:', err);
+                });
+            }
         }
 
         // Render the tutorial list
@@ -817,9 +847,12 @@
                     if (link) window.open(link, '_blank');
                 });
             });
-            // Add change event listeners for Firestore sync on tutorial-checkboxes
+            // Add change event listeners for tutorial completion
             document.querySelectorAll('.tutorial-checkbox').forEach(cb => {
-                cb.addEventListener('change', saveTutorialState);
+                cb.addEventListener('change', function() {
+                    const tutorialId = this.dataset.tutorialId;
+                    toggleCompletion(tutorialId, this.checked);
+                });
             });
         }
 
