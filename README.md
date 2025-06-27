@@ -52,20 +52,47 @@ A web application to track your progress through Swift programming tutorials, wi
    - Open `index.html` in a modern web browser
    - Or use a local server (e.g., `python -m http.server`)
 
-## Security Note
+## Security Measures
 
-Firebase security rules should be configured to protect user data. Here's a basic example for `firestore.rules`:
+### 1. Firebase Security Rules
 
 ```
 rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
     match /tutorials_state/{userId} {
+      // Only allow read/write if user is authenticated and owns the document
       allow read, write: if request.auth != null && request.auth.uid == userId;
+      
+      // Validate data structure
+      allow create: if request.resource.data.keys().hasAll(['tutorials']);
+      allow update: if (
+        request.resource.data.diff(resource.data).affectedKeys().hasOnly(['tutorials'])
+      );
     }
   }
 }
 ```
+
+### 2. API Key Protection
+- The Firebase API key is client-side but protected by:
+  - App Check (recommended to enable in Firebase Console)
+  - Domain restrictions in Firebase Console
+  - API key restrictions in Google Cloud Console
+
+### 3. Authentication Security
+- Google Sign-In with secure token-based authentication
+- Session persistence set to LOCAL (not persistent across browser sessions)
+- Email verification required for sensitive operations
+
+### 4. Rate Limiting
+- Enable Firebase App Check to prevent abuse
+- Set up Cloud Functions with rate limiting for sensitive operations
+
+### 5. Data Validation
+- All data is validated before being written to Firestore
+- Input sanitization on all user inputs
+- No sensitive user data is stored in the database
 
 ## Dependencies
 

@@ -14,25 +14,21 @@
     <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
     <script>
-      // Load Firebase configuration from environment variables
       const firebaseConfig = {
-        apiKey: import.meta.env.VITE_FIREBASE_API_KEY || "AIzaSyC_qKkryDOurbuxus53IKD-LZTFTwOcyiA",
-        authDomain: import.meta.env.VITE_FIREBASE_AUTH_DOMAIN || "swift-57396.firebaseapp.com",
-        projectId: import.meta.env.VITE_FIREBASE_PROJECT_ID || "swift-57396",
-        storageBucket: import.meta.env.VITE_FIREBASE_STORAGE_BUCKET || "swift-57396.firebasestorage.app",
-        messagingSenderId: import.meta.env.VITE_FIREBASE_MESSAGING_SENDER_ID || "637513218600",
-        appId: import.meta.env.VITE_FIREBASE_APP_ID || "1:637513218600:web:094f56395070fde52c131d",
-        measurementId: import.meta.env.VITE_FIREBASE_MEASUREMENT_ID || "G-3GY7240XCR"
+        apiKey: "AIzaSyC_qKkryDOurbuxus53IKD-LZTFTwOcyiA",
+        authDomain: "swift-57396.firebaseapp.com",
+        projectId: "swift-57396",
+        storageBucket: "swift-57396.firebasestorage.app",
+        messagingSenderId: "637513218600",
+        appId: "1:637513218600:web:094f56395070fde52c131d",
+        measurementId: "G-3GY7240XCR"
       };
       
-      // Initialize Firebase with the provided configuration
-      try {
-        firebase.initializeApp(firebaseConfig);
-        firebase.auth().setPersistence(firebase.auth.Auth.Persistence.LOCAL);
-        console.log("Firebase initialized successfully");
-      } catch (error) {
-        console.error("Firebase initialization error:", error);
-      }
+      // Enable Google Sign-In provider
+      firebase.initializeApp(firebaseConfig);
+      firebase.auth().setPersistence(firebase.auth.Auth.Persistence.LOCAL);
+      // Initialize Firebase
+      firebase.initializeApp(firebaseConfig);
       // Now you can use firebase.auth(), firebase.firestore(), etc.
     </script>
     <style>
