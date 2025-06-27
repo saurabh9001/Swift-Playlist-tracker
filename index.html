@@ -10,7 +10,9 @@
     <!-- Add Firebase products you want to use -->
     <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
-    <!-- TODO: Add more Firebase SDKs as needed -->
+    <!-- Firebase Auth with Google Sign-In -->
+    <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
     <script>
       const firebaseConfig = {
         apiKey: "AIzaSyC_qKkryDOurbuxus53IKD-LZTFTwOcyiA",
@@ -21,6 +23,10 @@
         appId: "1:637513218600:web:094f56395070fde52c131d",
         measurementId: "G-3GY7240XCR"
       };
+      
+      // Enable Google Sign-In provider
+      firebase.initializeApp(firebaseConfig);
+      firebase.auth().setPersistence(firebase.auth.Auth.Persistence.LOCAL);
       // Initialize Firebase
       firebase.initializeApp(firebaseConfig);
       // Now you can use firebase.auth(), firebase.firestore(), etc.
@@ -1333,6 +1339,8 @@ const completed = Object.values(tutorialState).filter(t => t.completed).length;
     // ----------------------- Firebase Authentication & Cross-device Sync -----------------------
     const auth = firebase.auth();
     const provider = new firebase.auth.GoogleAuthProvider();
+    provider.addScope('email');
+    provider.addScope('profile');
     
     const signInBtn = document.getElementById('google-signin-btn');
     const signOutBtn = document.getElementById('signout-btn');
