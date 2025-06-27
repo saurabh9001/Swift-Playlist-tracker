@@ -131,6 +131,21 @@
     </div>
 
     <div class="container mx-auto px-4 py-8 max-w-4xl">
+    <button id="test-firestore-btn" class="mb-4 px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded shadow">Test Firestore Write</button>
+<script>
+  document.getElementById('test-firestore-btn').addEventListener('click', function() {
+    db.collection('tutorials_state').doc('test_button_trial').set({
+      message: 'Button test',
+      timestamp: new Date().toISOString()
+    })
+    .then(() => {
+      console.log('✅ Test Firestore write: SUCCESS');
+    })
+    .catch((error) => {
+      console.error('❌ Test Firestore write: ERROR', error);
+    });
+  });
+</script>
         <!-- Header -->
         <div class="glass-card rounded-3xl shadow-lg mb-6 overflow-hidden">
             <div class="bg-gradient-to-r from-blue-500/20 to-pink-500/20 p-6">
@@ -752,6 +767,8 @@
                         <div class="p-4">
                             <div class="flex items-start">
                                 <div class="checkbox-container relative mr-3" data-id="${tutorial.id}">
+    <input type="checkbox" class="tutorial-checkbox absolute left-0 top-0 w-8 h-8 opacity-0 cursor-pointer" data-tutorial-id="${tutorial.id}" ${isCompleted ? "checked" : ""} tabindex="-1" aria-hidden="true">
+
                                     <div class="relative">
                                         <button class="checkbox w-8 h-8 rounded-full flex items-center justify-center ${isCompleted ? 'bg-blue-500 scale-110' : 'bg-gray-600/30'}" 
                                                 aria-label="${isCompleted ? 'Mark as not completed' : 'Mark as completed'}">
@@ -902,7 +919,7 @@
             let longPressTimer = null;
             let animationFrameId = null;
             
-            const startLongPress = (e) => {
+            let startLongPress = (e) => {
                 const checkbox = e.target.closest('.checkbox');
                 if (!checkbox) return;
                 
@@ -1081,7 +1098,7 @@
             };
             
             // Modified startLongPress to work with tap sequence
-            const originalStartLongPress = startLongPress;
+            let originalStartLongPress = startLongPress;
             startLongPress = (e) => {
                 const checkbox = e.target.closest('.checkbox');
                 if (!checkbox) return;
@@ -1263,28 +1280,46 @@
       }
       return id;
     }
-
-    // Get Firestore reference
     const db = firebase.firestore();
     const deviceId = getDeviceId();
     const stateDocRef = db.collection('tutorials_state').doc(deviceId);
 
+
     // Save state to Firestore and localStorage
+
+    // ... (rest of the code remains the same)
+    function loadTutorialStateFromLocal() {
+      const stateStr = localStorage.getItem('tutorialState');
+      if (stateStr) {
+        try {
+          const state = JSON.parse(stateStr);
+          applyTutorialState(state);
+        } catch {}
+      }
+    }
+
+    function applyTutorialState(state) {
+      const checkboxes = document.querySelectorAll('.tutorial-checkbox');
+      checkboxes.forEach(cb => {
+        if (state.hasOwnProperty(cb.dataset.tutorialId)) {
+          cb.checked = !!state[cb.dataset.tutorialId];
+        }
+      });
+    }
+
+
     function saveTutorialState() {
       const checkboxes = document.querySelectorAll('.tutorial-checkbox');
       const state = {};
       checkboxes.forEach(cb => {
         state[cb.dataset.tutorialId] = cb.checked;
       });
-      // Save to Firestore
       stateDocRef.set(state).catch(err => {
         console.warn('Could not save to Firestore:', err);
       });
-      // Save to localStorage
       localStorage.setItem('tutorialState', JSON.stringify(state));
     }
 
-    // Load state from Firestore, fallback to localStorage
     function loadTutorialState() {
       stateDocRef.get().then(doc => {
         if (doc.exists) {
@@ -1317,13 +1352,13 @@
       });
     }
 
-    // Attach listeners after DOMContentLoaded
     document.addEventListener('DOMContentLoaded', function() {
       loadTutorialState();
       document.querySelectorAll('.tutorial-checkbox').forEach(cb => {
         cb.addEventListener('change', saveTutorialState);
       });
     });
+    // --- End Firebase Firestore Sync & State Functions ---
   </script>
 </body>
 </html>
