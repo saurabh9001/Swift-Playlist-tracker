@@ -1,0 +1,1236 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Swift Learning Journey</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        @keyframes wave1 {
+            0% { transform: translateX(0) translateY(0); }
+            50% { transform: translateX(50%) translateY(-20px); }
+            100% { transform: translateX(100%) translateY(0); }
+        }
+        
+        @keyframes wave2 {
+            0% { transform: translateX(0) translateY(0); }
+            50% { transform: translateX(-30%) translateY(15px); }
+            100% { transform: translateX(0) translateY(0); }
+        }
+
+        .wave-background {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            height: 40vh;
+            overflow: hidden;
+            z-index: -1;
+        }
+
+        .wave1 {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            width: 200%;
+            height: 100%;
+            background: linear-gradient(to top, rgba(0, 122, 255, 0.1), rgba(0, 122, 255, 0.05));
+            border-radius: 50% 50% 0 0;
+            animation: wave1 15s linear infinite;
+        }
+
+        .wave2 {
+            position: absolute;
+            bottom: 0;
+            left: -50%;
+            width: 200%;
+            height: 80%;
+            background: linear-gradient(to top, rgba(255, 45, 146, 0.08), rgba(255, 45, 146, 0.03));
+            border-radius: 48% 52% 0 0;
+            animation: wave2 20s linear infinite;
+        }
+
+        .glass-card {
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+
+        .checkbox {
+            transition: all 0.3s ease;
+        }
+
+        .tutorial-card {
+            transition: all 0.3s ease;
+        }
+
+        .progress-bar {
+            overflow: hidden;
+            position: relative;
+        }
+
+        .progress-fill {
+            position: absolute;
+            top: 0;
+            left: 0;
+            bottom: 0;
+            width: 0%;
+            background: linear-gradient(to right, #007AFF, #5AC8FA);
+            transition: width 1s ease;
+        }
+
+        .wave-progress {
+            position: absolute;
+            width: 200%;
+            height: 100%;
+            background: linear-gradient(90deg, rgba(255,255,255,0.3) 0%, rgba(255,255,255,0) 50%);
+            animation: progressWave 3s linear infinite;
+        }
+
+        @keyframes progressWave {
+            0% { transform: translateX(-50%); }
+            100% { transform: translateX(0); }
+        }
+
+        .checkmark {
+            stroke-dasharray: 50;
+            stroke-dashoffset: 50;
+            transition: stroke-dashoffset 0.3s ease;
+        }
+
+        .checked .checkmark {
+            stroke-dashoffset: 0;
+        }
+    </style>
+</head>
+<body class="min-h-screen bg-gray-900 text-white font-sans">
+    <div class="wave-background">
+        <div class="wave1"></div>
+        <div class="wave2"></div>
+    </div>
+
+    <div class="container mx-auto px-4 py-8 max-w-4xl">
+        <!-- Header -->
+        <div class="glass-card rounded-3xl shadow-lg mb-6 overflow-hidden">
+            <div class="bg-gradient-to-r from-blue-500/20 to-pink-500/20 p-6">
+                <h1 class="text-2xl md:text-3xl font-bold text-center">Swift Learning Journey</h1>
+            </div>
+        </div>
+
+        <!-- Progress Section -->
+        <div class="glass-card rounded-3xl shadow-lg mb-6 overflow-hidden">
+            <div class="bg-gradient-to-b from-blue-500/20 to-pink-500/20 p-6">
+                <div class="flex justify-between items-center mb-4">
+                    <h2 class="text-xl font-semibold">Progress</h2>
+                    <div id="progress-count" class="text-lg font-bold text-blue-400">0 / 90</div>
+                </div>
+                
+                <div class="progress-bar h-3 rounded-full bg-white/10 mb-4 relative">
+                    <div class="progress-fill rounded-full">
+                        <div class="wave-progress"></div>
+                    </div>
+                </div>
+                
+                <div id="progress-percent" class="text-sm text-white/80">0% Complete</div>
+            </div>
+        </div>
+
+        <!-- Tutorial List -->
+        <div id="tutorial-list" class="space-y-3">
+            <!-- Tutorial cards will be inserted here -->
+        </div>
+    </div>
+
+    <!-- Untick Confirmation Modal -->
+    <div id="untick-modal" class="fixed inset-0 bg-black/50 flex items-center justify-center z-50 hidden">
+        <div class="glass-card rounded-2xl p-6 max-w-sm w-full mx-4">
+            <h3 class="text-xl font-bold mb-4">Untick Tutorial</h3>
+            <p class="mb-6">Are you sure you want to mark this tutorial as not completed?</p>
+            <div class="flex justify-end space-x-3">
+                <button id="cancel-untick" class="px-4 py-2 rounded-lg bg-gray-600 hover:bg-gray-500 transition">Cancel</button>
+                <button id="confirm-untick" class="px-4 py-2 rounded-lg bg-red-500 hover:bg-red-400 transition">Untick</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // YouTube links (first 10 shown as example, fill in the rest similarly)
+        const youtubeLinks = [
+    "https://www.youtube.com/watch?v=ug6T-iFk5OY",
+    "https://www.youtube.com/watch?v=GG7bu0NRyYM",
+    "https://www.youtube.com/watch?v=S6udZCgHiLA",
+    "https://www.youtube.com/watch?v=jlkcxTyM8m4",
+    "https://www.youtube.com/watch?v=jfBcryGKf38",
+    "https://www.youtube.com/watch?v=kVLntzY4YQg",
+    "https://www.youtube.com/watch?v=JGslWiKS_CU",
+    "https://www.youtube.com/watch?v=YQPOLBZiGWA",
+    "https://www.youtube.com/watch?v=IpgGhy1QTzw",
+    "https://www.youtube.com/watch?v=GUCYgvvxJI0",
+    "https://www.youtube.com/watch?v=clcA92OLgpI",
+    "https://www.youtube.com/watch?v=K1jEskrHcyY",
+    "https://www.youtube.com/watch?v=iM2lMBAckKg",
+    "https://www.youtube.com/watch?v=9GjGRqK8LSw",
+    "https://www.youtube.com/watch?v=bwqbf-1_7gE",
+    "https://www.youtube.com/watch?v=_FX8xCBmbeA",
+    "https://www.youtube.com/watch?v=VdqR02wVH3A",
+    "https://www.youtube.com/watch?v=TSuyx7YcDeg",
+    "https://www.youtube.com/watch?v=PrVO7b-BmdY",
+    "https://www.youtube.com/watch?v=vX4wPb0UUD0",
+    "https://www.youtube.com/watch?v=cDpJy4Y7OYE",
+    "https://www.youtube.com/watch?v=FToxl_63Unw",
+    "https://www.youtube.com/watch?v=PP321O-KZCs",
+    "https://www.youtube.com/watch?v=NduMuU0xeqk",
+    "https://www.youtube.com/watch?v=z_kR4cP23c4",
+    "https://www.youtube.com/watch?v=GbGhrnjZIP8",
+    "https://www.youtube.com/watch?v=GSqLnVOsV70",
+    "https://www.youtube.com/watch?v=9QMLpNnSVKk",
+    "https://www.youtube.com/watch?v=9pS3-KRiqDs",
+    "https://www.youtube.com/watch?v=eI2zT9eOAy8",
+    "https://www.youtube.com/watch?v=bEdiHjJuftI",
+    "https://www.youtube.com/watch?v=9UhzqjZO_tw",
+    "https://www.youtube.com/watch?v=T-UTLMKx2wc",
+    "https://www.youtube.com/watch?v=hbFG6CVCe2Q",
+    "https://www.youtube.com/watch?v=HOOUzY7VE6I",
+    "https://www.youtube.com/watch?v=F68lyXkkfCY",
+    "https://www.youtube.com/watch?v=HnIID4W3a_o",
+    "https://www.youtube.com/watch?v=1Ho_GhA70zw",
+    "https://www.youtube.com/watch?v=dRAuKT2Gtn0",
+    "https://www.youtube.com/watch?v=x9jpeZpmsbA",
+    "https://www.youtube.com/watch?v=v62IOA-eLsE",
+    "https://www.youtube.com/watch?v=UEvKhKviPRw",
+    "https://www.youtube.com/watch?v=pfJL8AW8UVQ",
+    "https://www.youtube.com/watch?v=KEWAc0vr1LU",
+    "https://www.youtube.com/watch?v=n0ycUw4SSNM",
+    "https://www.youtube.com/watch?v=qin6oM6PtGg",
+    "https://www.youtube.com/watch?v=Qr_Ls6Tyviw",
+    "https://www.youtube.com/watch?v=as6DkW9pXrw",
+    "https://www.youtube.com/watch?v=B84_69lsxok",
+    "https://www.youtube.com/watch?v=gtxwHuXBWeo",
+    "https://www.youtube.com/watch?v=byrRbWGN1Nk",
+    "https://www.youtube.com/watch?v=DgqY3RATP48",
+    "https://www.youtube.com/watch?v=LAhctdU5Mq4",
+    "https://www.youtube.com/watch?v=WDQtKY805Xk",
+    "https://www.youtube.com/watch?v=b87OBAYqpMw",
+    "https://www.youtube.com/watch?v=HDph1sNRJfQ",
+    "https://www.youtube.com/watch?v=1-5SXsVd1zY",
+    "https://www.youtube.com/watch?v=Fyhm8RxwpKs",
+    "https://www.youtube.com/watch?v=ALsr3hANqD0",
+    "https://www.youtube.com/watch?v=YrVwyL_mcts",
+    "https://www.youtube.com/watch?v=jomEs8oZAvo",
+    "https://www.youtube.com/watch?v=U0IgKPgyAgw",
+    "https://www.youtube.com/watch?v=Ga800-Qgft4",
+    "https://www.youtube.com/watch?v=O0ocR5kRzSA",
+    "https://www.youtube.com/watch?v=sQrRf99diz0",
+    "https://www.youtube.com/watch?v=Vtx5W8YVkqs",
+    "https://www.youtube.com/watch?v=QEVjbvb34Gg",
+    "https://www.youtube.com/watch?v=POK6Gijetek",
+    "https://www.youtube.com/watch?v=ddowZcqemoI",
+    "https://www.youtube.com/watch?v=-JmAbcISEmY",
+    "https://www.youtube.com/watch?v=n5X_V81OYnQ",
+    "https://www.youtube.com/watch?v=sZSlTDlo0Ag",
+    "https://www.youtube.com/watch?v=4Ui09XbYf1A",
+    "https://www.youtube.com/watch?v=htfa2sxqDuw",
+    "https://www.youtube.com/watch?v=X0Rw3uc3kj8",
+    "https://www.youtube.com/watch?v=wMIHdsFYGC0",
+    "https://www.youtube.com/watch?v=MYMcMWQeoEA",
+    "https://www.youtube.com/watch?v=aH3eJuqkfYU",
+    "https://www.youtube.com/watch?v=eVKcM8pZ-hg",
+    "https://www.youtube.com/watch?v=z5ZseKp0CiI",
+    "https://www.youtube.com/watch?v=CgH845mlYyw",
+    "https://www.youtube.com/watch?v=eh3Ywxl59JM",
+    "https://www.youtube.com/watch?v=tg7Iqtk0eWM",
+    "https://www.youtube.com/watch?v=62aW7VDW60w",
+    "https://www.youtube.com/watch?v=-PLvTfpbi0Y",
+    "https://www.youtube.com/watch?v=X15OcBObO_Y",
+    "https://www.youtube.com/watch?v=3cBi30ufsC4",
+    "https://www.youtube.com/watch?v=yuWjxZKmK14",
+    "https://www.youtube.com/watch?v=LtGPAQccXj8",
+    "https://www.youtube.com/watch?v=sqIDM9FBrjA",
+    "https://www.youtube.com/watch?v=V17ySb6eF9U",
+    "https://www.youtube.com/watch?v=jHhOPFmcy48",
+    "https://www.youtube.com/watch?v=rWcmYKlfwgs",
+    "https://www.youtube.com/watch?v=3XLq6f1tbEM",
+    "https://www.youtube.com/watch?v=dmeQ8iBkofs",
+    "https://www.youtube.com/watch?v=rGq_CKHhAyQ",
+    "https://www.youtube.com/watch?v=-jyjeerjvHA",
+    "https://www.youtube.com/watch?v=gc8BuZdCX40",
+    "https://www.youtube.com/watch?v=Ty-yZyALIVc",
+    "https://www.youtube.com/watch?v=z_Fk7LUXKkk",
+    "https://www.youtube.com/watch?v=vPeCMvD2RuE",
+    "https://www.youtube.com/watch?v=fB4HnpS8qkw",
+    "https://www.youtube.com/watch?v=GAI8JWIpMKY",
+    "https://www.youtube.com/watch?v=7-89daTz498",
+    "https://www.youtube.com/watch?v=gqlmd8p0Inc",
+    "https://www.youtube.com/watch?v=Cq0a6q2WXZ0",
+    "https://www.youtube.com/watch?v=rUikf6LYiCs",
+    "https://www.youtube.com/watch?v=K2lpVjepJfo",
+    "https://www.youtube.com/watch?v=sXpZh9UbMQc",
+    "https://www.youtube.com/watch?v=-f6VQopb0WU",
+    "https://www.youtube.com/watch?v=YPZg6KUVXPk",
+    "https://www.youtube.com/watch?v=6r3bHIkI4BY",
+    "https://www.youtube.com/watch?v=OuwtiYwXIuc",
+    "https://www.youtube.com/watch?v=TRYNrvlzHnY",
+    "https://www.youtube.com/watch?v=D3N-GA_J73g",
+    "https://www.youtube.com/watch?v=8TG_dMF0s7g",
+    "https://www.youtube.com/watch?v=qNzSP1I33Vg",
+    "https://www.youtube.com/watch?v=Sk24dfBUnmg",
+    "https://www.youtube.com/watch?v=68bEeqv3RqU",
+    "https://www.youtube.com/watch?v=-hAZCfoByPE",
+    "https://www.youtube.com/watch?v=gugS8DddnPg",
+    "https://www.youtube.com/watch?v=EbbQ5kd6TiY",
+    "https://www.youtube.com/watch?v=JsMJ5gdu8fg",
+    "https://www.youtube.com/watch?v=g1yZ8no6PxE",
+    "https://www.youtube.com/watch?v=55wLT-Ah9P0",
+    "https://www.youtube.com/watch?v=rcs_0xLZ8yI",
+    "https://www.youtube.com/watch?v=vDbFH9D6BSA",
+    "https://www.youtube.com/watch?v=8XiWJtorJPs",
+    "https://www.youtube.com/watch?v=9ZqsytI1gIE",
+    "https://www.youtube.com/watch?v=naK7cXsVxD0",
+    "https://www.youtube.com/watch?v=9VZeJdgQGwM",
+    "https://www.youtube.com/watch?v=KMxQqwP2Vk0",
+    "https://www.youtube.com/watch?v=8NxzhrGT21I",
+    "https://www.youtube.com/watch?v=Zzx9JgMNzkM",
+    "https://www.youtube.com/watch?v=GWivGqus6hE",
+    "https://www.youtube.com/watch?v=qhZPTZ52kpo",
+    "https://www.youtube.com/watch?v=1V1uMYB-Rzg",
+    "https://www.youtube.com/watch?v=G1Fu_275DwQ",
+    "https://www.youtube.com/watch?v=ezAEgfiHeJg",
+    "https://www.youtube.com/watch?v=S6GLrIDMKiA",
+    "https://www.youtube.com/watch?v=_mAmixE3TkU",
+    "https://www.youtube.com/watch?v=pvil4wnEuNY",
+    "https://www.youtube.com/watch?v=dC-oPnuP-Ns",
+    "https://www.youtube.com/watch?v=zhc0aZF4Cmo",
+    "https://www.youtube.com/watch?v=o8YHHQJzGz4",
+    "https://www.youtube.com/watch?v=_d_9GLnNmxc",
+    "https://www.youtube.com/watch?v=q9Mm5Yxf2bc",
+    "https://www.youtube.com/watch?v=PU8q5UPHTS0",
+    "https://www.youtube.com/watch?v=z1lynUA0ObE",
+    "https://www.youtube.com/watch?v=QZz9azaSYQ8",
+    "https://www.youtube.com/watch?v=Tf3xqyf6tBQ",
+    "https://www.youtube.com/watch?v=veb7XRHKoBQ",
+    "https://www.youtube.com/watch?v=yYuqQ_YAZrs",
+    "https://www.youtube.com/watch?v=U_yWXH141DY",
+    "https://www.youtube.com/watch?v=9PWtn1kj9Yo",
+    "https://www.youtube.com/watch?v=5_zu0NxQZjE",
+    "https://www.youtube.com/watch?v=bS1KfZeUvsM",
+    "https://www.youtube.com/watch?v=jb-tFgZYA0U",
+    "https://www.youtube.com/watch?v=LnCRLmvozTc",
+    "https://www.youtube.com/watch?v=LIK2_axhwaY",
+    "https://www.youtube.com/watch?v=lky5aes3m3w",
+    "https://www.youtube.com/watch?v=o_srROOXXgQ",
+    "https://www.youtube.com/watch?v=naX5RGCNsxI",
+    "https://www.youtube.com/watch?v=buppHtpXs9Q",
+    "https://www.youtube.com/watch?v=qn_Fw8t0GMU",
+    "https://www.youtube.com/watch?v=nY6DzyLCVeg",
+    "https://www.youtube.com/watch?v=iI7prZsHaTQ",
+    "https://www.youtube.com/watch?v=VW8s7jhrJMk",
+    "https://www.youtube.com/watch?v=xI7El05optA",
+    "https://www.youtube.com/watch?v=xSw_ftbtSgM",
+    "https://www.youtube.com/watch?v=K0TyIJpZHv8",
+    "https://www.youtube.com/watch?v=rMS8UBcQxeI",
+    "https://www.youtube.com/watch?v=jnW5m1qUINA",
+    "https://www.youtube.com/watch?v=bV5KnqMHXe0",
+    "https://www.youtube.com/watch?v=gU1C3tI7MFk",
+    "https://www.youtube.com/watch?v=n0HlwonH9v0",
+    "https://www.youtube.com/watch?v=i1X8B0tmyys",
+    "https://www.youtube.com/watch?v=M-1jRwzUIuI",
+    "https://www.youtube.com/watch?v=JAXoF-tcpcE",
+    "https://www.youtube.com/watch?v=D8lUhQ08s3s",
+    "https://www.youtube.com/watch?v=16YBGhRmyTE",
+    "https://www.youtube.com/watch?v=BkHWkf4CfKc",
+    "https://www.youtube.com/watch?v=mEdXRmIIvVc",
+    "https://www.youtube.com/watch?v=xuDEVxghNDQ",
+    "https://www.youtube.com/watch?v=RUWGjeDCkN8",
+    "https://www.youtube.com/watch?v=VTZQ4SQmVmg",
+    "https://www.youtube.com/watch?v=kwNbOIfJzRM",
+    "https://www.youtube.com/watch?v=qr7Iaq7_fko",
+    "https://www.youtube.com/watch?v=9crUbKKk7cY",
+    "https://www.youtube.com/watch?v=-18npGGy-2A",
+    "https://www.youtube.com/watch?v=oLhjqLgLr4s",
+    "https://www.youtube.com/watch?v=Ivzd2TtSh6s",
+    "https://www.youtube.com/watch?v=IWcmNBoT0-s",
+    "https://www.youtube.com/watch?v=3COmagWT6lU",
+    "https://www.youtube.com/watch?v=0Bcui9hyXhY",
+    "https://www.youtube.com/watch?v=9T-xoR7XmUc",
+    "https://www.youtube.com/watch?v=Ad0h-MG2EGU",
+    "https://www.youtube.com/watch?v=zFvsOI2eYBU",
+    "https://www.youtube.com/watch?v=TeOwQY1KlHo",
+    "https://www.youtube.com/watch?v=eRpLujwUUBA",
+    "https://www.youtube.com/watch?v=7S6iEmHICkQ",
+    "https://www.youtube.com/watch?v=k1A0YTkMCxc",
+    "https://www.youtube.com/watch?v=bAM_ybHPcRs",
+    "https://www.youtube.com/watch?v=oGPLjXgWqj8",
+    "https://www.youtube.com/watch?v=SlCBMdPfWNc",
+    "https://www.youtube.com/watch?v=TOUoyVSRsMo",
+    "https://www.youtube.com/watch?v=d-KsimIx9U0",
+    "https://www.youtube.com/watch?v=PCPyOEAGrIw",
+    "https://www.youtube.com/watch?v=L52LFKjgqi0",
+    "https://www.youtube.com/watch?v=tpyj4N-fvMs",
+    "https://www.youtube.com/watch?v=0tzHBIS59Ko",
+    "https://www.youtube.com/watch?v=Ps8t8Xdgvy0",
+    "https://www.youtube.com/watch?v=NJEBwDfp9PA",
+    "https://www.youtube.com/watch?v=hu1uqOQAWDk",
+    "https://www.youtube.com/watch?v=07_jJzw0bms",
+    "https://www.youtube.com/watch?v=Bc_pd9gqXUM",
+    "https://www.youtube.com/watch?v=zK00FbZOxsk",
+    "https://www.youtube.com/watch?v=1ThJ0S-c2Dk",
+    "https://www.youtube.com/watch?v=AYymiXF8G40",
+    "https://www.youtube.com/watch?v=vWKOXetgr4g",
+    "https://www.youtube.com/watch?v=OTjSpxqbeBI",
+    "https://www.youtube.com/watch?v=g06t8LP7zrQ",
+    "https://www.youtube.com/watch?v=9TkzkAMq6-o",
+    "https://www.youtube.com/watch?v=kSt3jCwpLmo",
+    "https://www.youtube.com/watch?v=31sTDonbI5k",
+    "https://www.youtube.com/watch?v=Kl_3xrZBEFY",
+    "https://www.youtube.com/watch?v=rNDOxsCK2Ck",
+    "https://www.youtube.com/watch?v=MkfaywHkXJo",
+    "https://www.youtube.com/watch?v=YRdAMtVA1aY",
+    "https://www.youtube.com/watch?v=YRdAMtVA1aY",
+    "https://www.youtube.com/watch?v=Vlp9ezQTcAQ",
+    "https://www.youtube.com/watch?v=I6g6wGg_6LM",
+    "https://www.youtube.com/watch?v=KL1c5Mx3kek",
+    "https://www.youtube.com/watch?v=7wti4FqEmBw",
+    "https://www.youtube.com/watch?v=zFgZciqhI08",
+    "https://www.youtube.com/watch?v=rAKxcNe2nxo",
+    "https://www.youtube.com/watch?v=yd6u9pz4re0",
+    "https://www.youtube.com/watch?v=wbDpYEyCMZE",
+    "https://www.youtube.com/watch?v=Zy6FGjCfMhc",
+    "https://www.youtube.com/watch?v=04fzFk367Dg",
+    "https://www.youtube.com/watch?v=4z99a_dQ0lc",
+    "https://www.youtube.com/watch?v=W0dsEJJ-Eh4",
+    "https://www.youtube.com/watch?v=Q4CnkZWjDUc",
+    "https://www.youtube.com/watch?v=SENZiZ_IFgU",
+    "https://www.youtube.com/watch?v=cE5d9uxQ-10",
+    "https://www.youtube.com/watch?v=bh-fRo7WZNY",
+    "https://www.youtube.com/watch?v=c7QE4XOQ_nA",
+    "https://www.youtube.com/watch?v=vdI0ZpJXcHk",
+    "https://www.youtube.com/watch?v=QKUBGEMcbAY",
+    "https://www.youtube.com/watch?v=TOsqZ5GxeiU",
+    "https://www.youtube.com/watch?v=MKJsFcUIJ2w",
+    "https://www.youtube.com/watch?v=myLtDcYuE3k",
+    "https://www.youtube.com/watch?v=r5P1sNUWbJk",
+    "https://www.youtube.com/watch?v=2rZh-9uPZnI",
+    "https://www.youtube.com/watch?v=1m_Ho4ggfMc",
+    "https://www.youtube.com/watch?v=oucWBTMOaz0",
+    "https://www.youtube.com/watch?v=-ErGf0_iqrw",
+    "https://www.youtube.com/watch?v=Ea3dl2gy3QY",
+    "https://www.youtube.com/watch?v=FKUBspZLZb8"
+];
+        // Tutorial data
+        const tutorials = [
+            { id: 1, title: "1.Why learn Swift", category: "Swift for Complete Beginners" },
+      { id: 2, title: "2.About this course", category: "Swift for Complete Beginners" },
+      { id: 3, title: "3.How to follow along", category: "Swift for Complete Beginners" },
+      { id: 4, title: "4.How to create constants and variables", category: "Swift for Complete Beginners" },
+      { id: 5, title: "5.How to create strings", category: "Swift for Complete Beginners" },
+      { id: 6, title: "6.How to store whole numbers", category: "Swift for Complete Beginners" },
+      { id: 7, title: "7.How to store decimal numbers", category: "Swift for Complete Beginners" },
+      { id: 8, title: "8.How to store truth with Booleans", category: "Swift for Complete Beginners" },
+      { id: 9, title: "9.How to join strings together", category: "Swift for Complete Beginners" },
+      { id: 10, title: "10.Summary: Simple data", category: "Swift for Complete Beginners" },
+      { id: 11, title: "11.Checkpoint 1", category: "Swift for Complete Beginners" },
+      { id: 12, title: "12.How to store ordered data in arrays", category: "Swift for Complete Beginners" },
+      { id: 13, title: "13.How to store and find data in dictionaries", category: "Swift for Complete Beginners" },
+      { id: 14, title: "14.How to use sets for fast data lookup", category: "Swift for Complete Beginners" },
+      { id: 15, title: "15.How to create and use enums", category: "Swift for Complete Beginners" },
+      { id: 16, title: "16.How to use type annotations", category: "Swift for Complete Beginners" },
+      { id: 17, title: "17.Summary: Complex data", category: "Swift for Complete Beginners" },
+      { id: 18, title: "18.Checkpoint 2", category: "Swift for Complete Beginners" },
+      { id: 19, title: "19.How to check a condition is true or false", category: "Swift for Complete Beginners" },
+      { id: 20, title: "20.How to check multiple conditions", category: "Swift for Complete Beginners" },
+      { id: 21, title: "21.How to use switch statements to check multiple conditions", category: "Swift for Complete Beginners" },
+      { id: 22, title: "22.How to use the ternary conditional operator for quick tests", category: "Swift for Complete Beginners" },
+      { id: 23, title: "23.How to use a for loop to repeat work", category: "Swift for Complete Beginners" },
+      { id: 24, title: "24.How to use a while loop to repeat work", category: "Swift for Complete Beginners" },
+      { id: 25, title: "25.How to skip loop items with break and continue", category: "Swift for Complete Beginners" },
+      { id: 26, title: "26.Summary: Conditions and loops", category: "Swift for Complete Beginners" },
+      { id: 27, title: "27.Checkpoint 3", category: "Swift for Complete Beginners" },
+      { id: 28, title: "28.How to reuse code with functions", category: "Swift for Complete Beginners" },
+      { id: 29, title: "29.How to return values from functions", category: "Swift for Complete Beginners" },
+      { id: 30, title: "30.How to return multiple values from functions", category: "Swift for Complete Beginners" },
+      { id: 31, title: "31.How to customize parameter labels", category: "Swift for Complete Beginners" },
+      { id: 32, title: "32.How to provide default values for parameters", category: "Swift for Complete Beginners" },
+      { id: 33, title: "33.How to handle errors in functions", category: "Swift for Complete Beginners" },
+      { id: 34, title: "34.Summary: Functions", category: "Swift for Complete Beginners" },
+      { id: 35, title: "35.Checkpoint 4", category: "Swift for Complete Beginners" },
+      { id: 36, title: "36.How to create and use closures", category: "Swift for Complete Beginners" },
+      { id: 37, title: "37.How to use trailing closures and shorthand syntax", category: "Swift for Complete Beginners" },
+      { id: 38, title: "38.How to accept functions as parameters", category: "Swift for Complete Beginners" },
+      { id: 39, title: "39.Summary: Closures", category: "Swift for Complete Beginners" },
+      { id: 40, title: "40.Checkpoint 5", category: "Swift for Complete Beginners" },
+      { id: 41, title: "41.How to create your own structs", category: "Swift for Complete Beginners" },
+      { id: 42, title: "42.How to compute property values dynamically", category: "Swift for Complete Beginners" },
+      { id: 43, title: "43.How to take action when a property changes", category: "Swift for Complete Beginners" },
+      { id: 44, title: "44.How to create custom initializers", category: "Swift for Complete Beginners" },
+      { id: 45, title: "45.How to limit access to internal data using access control", category: "Swift for Complete Beginners" },
+            { id: 46, title: "46.Static properties and methods", category: "Swift for Complete Beginners" },
+      { id: 47, title: "47.Summary: Structs", category: "Swift for Complete Beginners" },
+      { id: 48, title: "48.Checkpoint 6", category: "Swift for Complete Beginners" },
+      { id: 49, title: "49.How to create your own classes", category: "Swift for Complete Beginners" },
+      { id: 50, title: "50.How to make one class inherit from another", category: "Swift for Complete Beginners" },
+      { id: 51, title: "51.How to add initializers for classes", category: "Swift for Complete Beginners" },
+      { id: 52, title: "52.How to copy classes", category: "Swift for Complete Beginners" },
+      { id: 53, title: "53.How to create a deinitializer for a class", category: "Swift for Complete Beginners" },
+      { id: 54, title: "54.How to work with variables inside classes", category: "Swift for Complete Beginners" },
+      { id: 55, title: "55.Summary: Classes", category: "Swift for Complete Beginners" },
+      { id: 56, title: "56.Checkpoint 7", category: "Swift for Complete Beginners" },
+      { id: 57, title: "57.How to create and use protocols", category: "Swift for Complete Beginners" },
+      { id: 58, title: "58.How to use opaque return types", category: "Swift for Complete Beginners" },
+      { id: 59, title: "59.How to create and use extensions", category: "Swift for Complete Beginners" },
+      { id: 60, title: "60.How to create and use protocol extensions", category: "Swift for Complete Beginners" },
+      { id: 61, title: "61.How to get the most from protocol extensions", category: "Swift for Complete Beginners" },
+      { id: 62, title: "62.Summary: Protocols and extensions", category: "Swift for Complete Beginners" },
+      { id: 63, title: "63.Checkpoint 8", category: "Swift for Complete Beginners" },
+      { id: 64, title: "64.How to handle missing data with optionals", category: "Swift for Complete Beginners" },
+      { id: 65, title: "65.How to unwrap optionals with guard", category: "Swift for Complete Beginners" },
+      { id: 66, title: "66.How to unwrap optionals with nil coalescing", category: "Swift for Complete Beginners" },
+      { id: 67, title: "67.How to handle multiple optionals using optional chaining", category: "Swift for Complete Beginners" },
+      { id: 68, title: "68.How to handle function failure with optionals", category: "Swift for Complete Beginners" },
+      { id: 69, title: "69.Summary: Optionals", category: "Swift for Complete Beginners" },
+      { id: 70, title: "70.Checkpoint 9", category: "Swift for Complete Beginners" },
+      { id: 71, title: "71.Learn the Essentials of Swift in one hour", category: "Swift for Complete Beginners" },
+      { id: 72, title: "72.Understanding the basic structure of a SwiftUI app", category: "WeSplit SwiftUI Tutorial 1/11" },
+      { id: 73, title: "73.Creating a form", category: "WeSplit SwiftUI Tutorial 2/11" },
+      { id: 74, title: "74.Adding a navigation bar", category: "WeSplit SwiftUI Tutorial 3/11" },
+      { id: 75, title: "75.Modifying program state", category: "WeSplit SwiftUI Tutorial 4/11" },
+      { id: 76, title: "76.Binding state to user interface controls", category: "WeSplit SwiftUI Tutorial 5/11" },
+      { id: 77, title: "77.Creating views in a loop", category: "WeSplit SwiftUI Tutorial 6/11" },
+      { id: 78, title: "78.Reading text from the user with TextField", category: "WeSplit SwiftUI Tutorial 7/11" },
+      { id: 79, title: "79.Creating pickers in a form", category: "WeSplit SwiftUI Tutorial 8/11" },
+      { id: 80, title: "80.Adding a segmented control for tip percentages", category: "WeSplit SwiftUI Tutorial 9/11" },
+      { id: 81, title: "81.Calculating the total per person", category: "WeSplit SwiftUI Tutorial 10/11" },
+      { id: 82, title: "82.Hiding the keyboard", category: "WeSplit SwiftUI Tutorial 11/11" },
+      { id: 83, title: "83.Using stacks to arrange views", category: "Guess the Flag SwiftUI Tutorial 1/9" },
+      { id: 84, title: "84.Colors and frames", category: "Guess the Flag SwiftUI Tutorial 2/9" },
+      { id: 85, title: "85.Gradients", category: "Guess the Flag SwiftUI Tutorial 3/9" },
+      { id: 86, title: "86.Buttons and images", category: "Guess the Flag SwiftUI Tutorial 4/9" },
+      { id: 87, title: "87.Showing alert messages", category: "Guess the Flag SwiftUI Tutorial 5/9" },
+      { id: 88, title: "88.Stacking up buttons", category: "Guess the Flag SwiftUI Tutorial 6/9" },
+      { id: 89, title: "89.Showing the player’s score with an alert", category: "Guess the Flag SwiftUI Tutorial 7/9" },
+      { id: 90, title: "90.Styling our flags", category: "Guess the Flag SwiftUI Tutorial 8/9" },
+      { id: 91, title: "91.Upgrading our design", category: "Guess the Flag SwiftUI Tutorial 9/9" },
+            { id: 92, title: "92.Why does SwiftUI use structs for views?", category: "Views and Modifiers SwiftUI Tutorial 1/10" },
+      { id: 93, title: "93.What is behind the main SwiftUI view?", category: "Views and Modifiers SwiftUI Tutorial 2/10" },
+      { id: 94, title: "94.Why modifier order matters", category: "Views and Modifiers SwiftUI Tutorial 3/10" },
+      { id: 95, title: "95.Why does SwiftUI use “some View” for its view type?", category: "Views and Modifiers SwiftUI Tutorial" },
+      { id: 96, title: "96.Conditional modifiers", category: "Views and Modifiers SwiftUI Tutorial 5/10" },
+      { id: 97, title: "97.Environment modifiers", category: "Views and Modifiers SwiftUI Tutorial 6/10" },
+      { id: 98, title: "98.Views as properties", category: "Views and Modifiers SwiftUI Tutorial 7/10" },
+      { id: 99, title: "99.View composition", category: "Views and Modifiers SwiftUI Tutorial 8/10" },
+      { id: 100, title: "100.Custom modifiers", category: "Views and Modifiers SwiftUI Tutorial 9/10" },
+      { id: 101, title: "101.Custom containers", category: "Views and Modifiers SwiftUI Tutorial 10/10" },
+      { id: 102, title: "102.Entering numbers with Stepper", category: "BetterRest SwiftUI Tutorial 1/7" },
+      { id: 103, title: "103.Selecting dates and times with DatePicker", category: "BetterRest SwiftUI Tutorial 2/7" },
+      { id: 104, title: "104.Working with dates", category: "BetterRest SwiftUI Tutorial 3/7" },
+      { id: 105, title: "105.Training a model with Create ML", category: "BetterRest SwiftUI Tutorial 4/7" },
+      { id: 106, title: "106.Building a basic layout", category: "BetterRest SwiftUI Tutorial 5/7" },
+      { id: 107, title: "107.Connecting SwiftUI to Core ML", category: "BetterRest SwiftUI Tutorial 6/7" },
+      { id: 108, title: "108.Cleaning up the user interface", category: "BetterRest SwiftUI Tutorial 7/7" },
+      { id: 109, title: "109.Introducing List, your best friend", category: "Word Scramble SwiftUI Tutorial 1/6" },
+      { id: 110, title: "110.Loading resources from your app bundle", category: "Word Scramble SwiftUI Tutorial 2/6" },
+      { id: 111, title: "111.Working with strings", category: "Word Scramble SwiftUI Tutorial 3/6" },
+      { id: 112, title: "112.Adding to a list of words", category: "Word Scramble SwiftUI Tutorial 4/6" },
+      { id: 113, title: "113.Running code when our app launches", category: "Word Scramble SwiftUI Tutorial 5/6" },
+      { id: 114, title: "114.Validating words with UITextChecker", category: "Word Scramble SwiftUI Tutorial 6/6" },
+      { id: 115, title: "115.Creating implicit animations", category: "Animation SwiftUI Tutorial 1/8" },
+      { id: 116, title: "116.Customizing animations in SwiftUI", category: "Animation SwiftUI Tutorial 2/8" },
+      { id: 117, title: "117.Animating bindings", category: "Animation SwiftUI Tutorial 3/8" },
+      { id: 118, title: "118.Creating explicit animations", category: "Animation SwiftUI Tutorial 4/8" },
+      { id: 119, title: "119.Controlling the animation stack", category: "Animation SwiftUI Tutorial 5/8" },
+      { id: 120, title: "120.Animating gestures", category: "Animation SwiftUI Tutorial 6/8" },
+      { id: 121, title: "121.Showing and hiding views with transitions", category: "Animation SwiftUI Tutorial 7/8" },
+      { id: 122, title: "122.Building custom transitions using ViewModifier", category: "Animation SwiftUI Tutorial 8/8" },
+      { id: 123, title: "123.Using @State with classes", category: "iExpense SwiftUI Tutorial 1/11" },
+      { id: 124, title: "124.Sharing SwiftUI state with @Observable", category: "iExpense SwiftUI Tutorial 2/11" },
+      { id: 125, title: "125.Showing and hiding views", category: "iExpense SwiftUI Tutorial 3/11" },
+      { id: 126, title: "126.Deleting items using onDelete()", category: "iExpense SwiftUI Tutorial 4/11" },
+      { id: 127, title: "127.Storing user settings with UserDefaults", category: "iExpense SwiftUI Tutorial 5/11" },
+      { id: 128, title: "128.Archiving Swift objects with Codable", category: "iExpense SwiftUI Tutorial 6/11" },
+      { id: 129, title: "129.Building a list we can delete from", category: "iExpense SwiftUI Tutorial 7/11" },
+      { id: 130, title: "130.Working with Identifiable items in SwiftUI", category: "iExpense SwiftUI Tutorial 8/11" },
+      { id: 131, title: "131.Sharing an observed object with a new view", category: "iExpense SwiftUI Tutorial 9/11" },
+      { id: 132, title: "132.Making changes permanent with UserDefaults", category: "iExpense SwiftUI Tutorial 10/11" },
+      { id: 133, title: "133.Final polish", category: "iExpense SwiftUI Tutorial 11/11" },
+      { id: 134, title: "134.Resizing images to fit the available space", category: "Moonshot SwiftUI Tutorial 1/11" },
+      { id: 135, title: "135.How ScrollView lets us work with scrolling data", category: "Moonshot SwiftUI Tutorial 2/11" },
+      { id: 136, title: "136.Pushing new views onto the stack using NavigationLink", category: "Moonshot SwiftUI Tutorial 3/11" },
+      { id: 137, title: "137.Working with hierarchical Codable data", category: "Moonshot SwiftUI Tutorial 4/11" },
+     { id: 138, title: "138.How to lay out views in a scrolling grid", category: "Moonshot SwiftUI Tutorial 5/11" },
+      { id: 139, title: "139.Loading a specific kind of Codable data", category: "Moonshot SwiftUI Tutorial 6/11" },
+      { id: 140, title: "140.Using generics to load any kind of Codable data", category: "Moonshot SwiftUI Tutorial 7/11" },
+      { id: 141, title: "141.Formatting our mission view", category: "Moonshot SwiftUI Tutorial 8/11" },
+      { id: 142, title: "142.Showing mission details with ScrollView and containerRelativeFrame()", category: "Moonshot SwiftUI 9/11" },
+      { id: 143, title: "143.Merging Codable structs", category: "Moonshot SwiftUI Tutorial 10/11" },
+      { id: 144, title: "144.Finishing up with one last view", category: "Moonshot SwiftUI Tutorial 11/11" },
+      { id: 145, title: "145.The problem with a simple NavigationLink", category: "Navigation SwiftUI Tutorial 1/9" },
+      { id: 146, title: "146.Handling navigation the smart way with navigationDestination()", category: "Navigation SwiftUI Tutorial 2/9" },
+      { id: 147, title: "147.Programmatic navigation with NavigationStack", category: "Navigation SwiftUI Tutorial 3/9" },
+      { id: 148, title: "148.Navigating to different data types using NavigationPath", category: "Navigation SwiftUI Tutorial 4/9" },
+      { id: 149, title: "149.How to make a NavigationStack return to its root view", category: "Navigation SwiftUI Tutorial 5/9" },
+      { id: 150, title: "150.How to save NavigationStack paths using Codable", category: "Navigation SwiftUI Tutorial 6/9" },
+      { id: 151, title: "151.Customizing the navigation bar appearance", category: "Navigation SwiftUI Tutorial 7/9" },
+      { id: 152, title: "152.Placing toolbar buttons in exact locations", category: "Navigation SwiftUI Tutorial 8/9" },
+      { id: 153, title: "153.Making your navigation title editable", category: "Navigation SwiftUI Tutorial 9/9" },
+      { id: 154, title: "154.Sending and receiving Codable data with URLSession and SwiftUI", category: "Cupcake Corner SwiftUI Tutorial 1/9" },
+      { id: 155, title: "155.Loading an image from a remote server", category: "Cupcake Corner SwiftUI Tutorial 2/9" },
+      { id: 156, title: "156.Validating and disabling forms", category: "Cupcake Corner SwiftUI Tutorial 3/9" },
+      { id: 157, title: "157.Adding Codable conformance to an @Observable class", category: "Cupcake Corner SwiftUI Tutorial 4/9" },
+      { id: 158, title: "158.Adding haptic effects", category: "Cupcake Corner SwiftUI Tutorial 5/9" },
+      { id: 159, title: "159.Taking basic order details", category: "Cupcake Corner SwiftUI Tutorial 6/9" },
+      { id: 160, title: "160.Checking for a valid address", category: "Cupcake Corner SwiftUI Tutorial 7/9" },
+      { id: 161, title: "161.Preparing for checkout", category: "Cupcake Corner SwiftUI Tutorial 8/9" },
+      { id: 162, title: "162.Sending and receiving orders over the internet", category: "Cupcake Corner SwiftUI Tutorial 9/9" },
+      { id: 163, title: "163.Creating a custom component with @Binding", category: "Bookworm SwiftUI Tutorial 1/10" },
+      { id: 164, title: "164.Accepting multi-line text input with TextEditor", category: "Bookworm SwiftUI Tutorial 2/10" },
+      { id: 165, title: "165.Introduction to SwiftData and SwiftUI", category: "Bookworm SwiftUI Tutorial 3/10" },
+      { id: 166, title: "166.Creating books with SwiftData", category: "Bookworm SwiftUI Tutorial 4/10" },
+      { id: 167, title: "167.Adding a custom star rating component", category: "Bookworm SwiftUI Tutorial 5/10" },
+      { id: 168, title: "168.Building a list with @Query", category: "Bookworm SwiftUI Tutorial 6/10" },
+      { id: 169, title: "169.Showing book details", category: "Bookworm SwiftUI Tutorial 7/10" },
+      { id: 170, title: "170.Sorting SwiftData queries using SortDescriptor", category: "Bookworm SwiftUI Tutorial 8/10" },
+      { id: 171, title: "171.Deleting from a SwiftData query", category: "Bookworm SwiftUI Tutorial 9/10" },
+      { id: 172, title: "172.Using an alert to pop a NavigationLink programmatically", category: "Bookworm SwiftUI Tutorial 10/10" },
+      { id: 173, title: "173.Editing SwiftData model objects", category: "SwiftData SwiftUI Tutorial 1/5" },
+      { id: 174, title: "174.Filtering @Query using #Predicate", category: "SwiftData SwiftUI Tutorial 2/5" },
+      { id: 175, title: "175.Dynamically sorting and filtering @Query with SwiftUI", category: "SwiftData SwiftUI Tutorial 3/5" },
+      { id: 176, title: "176.Relationships with SwiftData, SwiftUI, and @Query", category: "SwiftData SwiftUI Tutorial 4/5" },
+      { id: 177, title: "177.Syncing SwiftData with CloudKit", category: "SwiftData SwiftUI Tutorial 5/5" },
+      { id: 178, title: "178.How property wrappers become structs", category: "Instafilter SwiftUI Tutorial 1/13" },
+      { id: 179, title: "179.Responding to state changes using onChange()", category: "Instafilter SwiftUI Tutorial 2/13" },
+      { id: 180, title: "180.Showing multiple options with confirmationDialog()", category: "Instafilter SwiftUI Tutorial 3/13" },
+      { id: 181, title: "181.Integrating Core Image with SwiftUI", category: "Instafilter SwiftUI Tutorial 4/13" },
+      { id: 182, title: "182.Showing empty states with ContentUnavailableView", category: "Instafilter SwiftUI Tutorial 5/13" },
+      { id: 183, title: "183.Loading photos from the user's photo library", category: "Instafilter SwiftUI Tutorial 6/13" },
+            { id: 184, title: "184.How to let the user share content with ShareLink", category: "Instafilter SwiftUI Tutorial 7/13" },
+      { id: 185, title: "185.How to ask the user to leave an App Store review", category: "Instafilter SwiftUI Tutorial 8/13" },
+      { id: 186, title: "186.Building our basic UI", category: "Instafilter SwiftUI Tutorial 9/13" },
+      { id: 187, title: "187.Importing an image into SwiftUI using PhotosPicker", category: "Instafilter SwiftUI Tutorial 10/13" },
+      { id: 188, title: "188.Basic image filtering using Core Image", category: "Instafilter SwiftUI Tutorial 11/13" },
+      { id: 189, title: "189.Customizing our filter using confirmationDialog()", category: "Instafilter SwiftUI Tutorial 12/13" },
+      { id: 190, title: "190.Sharing an image using ShareLink", category: "Instafilter SwiftUI Tutorial 13/13" },
+      { id: 191, title: "191.Adding conformance to Comparable for custom types", category: "Bucket List SwiftUI Tutorial 1/12" },
+      { id: 192, title: "192.Writing data to the documents directory", category: "Bucket List SwiftUI Tutorial 2/12" },
+      { id: 193, title: "193.Switching view states with enums", category: "Bucket List SwiftUI Tutorial 3/12" },
+      { id: 194, title: "194.Integrating MapKit with SwiftUI", category: "Bucket List SwiftUI Tutorial 4/12" },
+      { id: 195, title: "195.Using Touch ID and Face ID with SwiftUI", category: "Bucket List SwiftUI Tutorial 5/12" },
+      { id: 196, title: "196.Adding user locations to a map", category: "Bucket List SwiftUI Tutorial 6/12" },
+      { id: 197, title: "197.Improving our map annotations", category: "Bucket List SwiftUI Tutorial 7/12" },
+      { id: 198, title: "198.Selecting and editing map annotations", category: "Bucket List SwiftUI Tutorial 8/12" },
+      { id: 199, title: "199.Downloading data from Wikipedia", category: "Bucket List SwiftUI Tutorial 9/12" },
+      { id: 200, title: "200.Sorting Wikipedia results", category: "Bucket List SwiftUI Tutorial 10/12" },
+      { id: 201, title: "201.Introducing MVVM into your SwiftUI project", category: "Bucket List SwiftUI Tutorial 11/12" },
+      { id: 202, title: "202.Locking our UI behind Face ID", category: "Bucket List SwiftUI Tutorial 12/12" },
+      { id: 203, title: "203.Identifying views with useful labels", category: "Accessibility SwiftUI Tutorial 1/7" },
+      { id: 204, title: "204.Hiding and grouping accessibility data", category: "Accessibility SwiftUI Tutorial 2/7" },
+      { id: 205, title: "205.Reading the value of controls", category: "Accessibility SwiftUI Tutorial 3/7" },
+      { id: 206, title: "206.Handling voice input in SwiftUI", category: "Accessibility SwiftUI Tutorial 4/7" },
+      { id: 207, title: "207.Fixing Guess the Flag", category: "Accessibility SwiftUI Tutorial 5/7" },
+      { id: 208, title: "208.Fixing Word Scramble", category: "Accessibility SwiftUI Tutorial 6/7" },
+      { id: 209, title: "209.Fixing Bookworm", category: "Accessibility SwiftUI Tutorial 7/7" },
+      { id: 210, title: "210.Letting users select items in a List", category: "Hot Prospects 1/16" },
+      { id: 211, title: "211.Creating tabs with TabView and tabItem()", category: "Hot Prospects 2/16" },
+      { id: 212, title: "212.Understanding Swift’s Result type", category: "Hot Prospects 3/16" },
+      { id: 213, title: "213.Controlling image interpolation in SwiftUI", category: "Hot Prospects 4/16" },
+      { id: 214, title: "214.Creating context menus", category: "Hot Prospects 5/16" },
+      { id: 215, title: "215.Adding custom row swipe actions to a List", category: "Hot Prospects 6/16" },
+      { id: 216, title: "216.Scheduling local notifications", category: "Hot Prospects 7/16" },
+      { id: 217, title: "217.Adding Swift package dependencies in Xcode", category: "Hot Prospects 8/16" },
+      { id: 218, title: "218.Building our tab bar", category: "Hot Prospects 9/16" },
+      { id: 219, title: "219.Storing our data with SwiftData", category: "Hot Prospects 10/16" },
+      { id: 220, title: "220.Dynamically filtering our SwiftData query", category: "Hot Prospects 11/16" },
+      { id: 221, title: "221.Generating and scaling up a QR code", category: "Hot Prospects 12/16" },
+      { id: 222, title: "222.Scanning QR codes with SwiftUI", category: "Hot Prospects SwiftUI Tutorial 13/16" },
+      { id: 223, title: "223.Adding options with swipe actions", category: "Hot Prospects SwiftUI Tutorial 14/16" },
+      { id: 224, title: "224.Adding a context menu to an image", category: "Hot Prospects SwiftUI Tutorial 15/16" },
+      { id: 225, title: "225.Posting notifications to the lock screen", category: "Hot Prospects SwiftUI Tutorial 16/16" },
+      { id: 226, title: "226.How to use gestures in SwiftUI", category: "Flashzilla SwiftUI Tutorial 1/13" },
+      { id: 227, title: "227.Disabling user interactivity with allowsHitTesting():", category: "Flashzilla SwiftUI Tutorial 2/13" },
+      { id: 228, title: "228.Triggering events repeatedly using a time", category: "Flashzilla SwiftUI Tutorial 3/13" },
+      { id: 229, title: "229.How to be notified when your SwiftUI app moves to the background", category: "Flashzilla SwiftUI Tutorial 4/13" },
+            { id: 230, title: "230.How to be notified when your SwiftUI app moves to the background", category: "Flashzilla SwiftUI Tutorial 4/13" },
+      { id: 231, title: "231.Supporting specific accessibility needs with SwiftUI", category: "Flashzilla SwiftUI Tutorial 5/13" },
+      { id: 232, title: "232.Designing a single card view", category: "Flashzilla SwiftUI Tutorial 6/13" },
+      { id: 233, title: "233.Building a stack of cards", category: "Flashzilla SwiftUI Tutorial 7/13" },
+      { id: 234, title: "234.Moving views with DragGesture and offset()", category: "Flashzilla SwiftUI Tutorial 8/13" },
+      { id: 235, title: "235.Coloring views as we swipe", category: "Flashzilla SwiftUI Tutorial 9/13" },
+      { id: 236, title: "236.Counting down with a Timer", category: "Flashzilla SwiftUI Tutorial 10/13" },
+      { id: 237, title: "237.Ending the app with allowsHitTesting()", category: "Flashzilla SwiftUI Tutorial 11/13" },
+      { id: 238, title: "238.Fixing the bugs", category: "Flashzilla SwiftUI Tutorial 12/13" },
+      { id: 239, title: "239.Adding and deleting cards", category: "Flashzilla SwiftUI Tutorial 13/13" },
+      { id: 240, title: "240.How layout works in SwiftUI", category: "Layout and Geometry SwiftUI Tutorial 1/8" },
+      { id: 241, title: "241.Alignment and alignment guides", category: "Layout and Geometry SwiftUI Tutorial 2/8" },
+      { id: 242, title: "242.How to create a custom alignment guide", category: "Layout and Geometry SwiftUI Tutorial 3/8" },
+      { id: 243, title: "243.Absolute positioning for SwiftUI views", category: "Layout and Geometry SwiftUI Tutorial 4/8" },
+      { id: 244, title: "244.Resizing images to fit the screen using GeometryReader", category: "Layout and Geometry SwiftUI Tutorial 5/8" },
+      { id: 245, title: "245.Understanding frames and coordinates in GeometryReader", category: "Layout and Geometry SwiftUI Tutorial 6/8" },
+      { id: 246, title: "246.ScrollView effects using GeometryReader", category: "Layout and Geometry SwiftUI Tutorial 7/8" },
+      { id: 247, title: "247.ScrollView effects using visualEffect() and scrollTargetBehavior()", category: "Layout and Geometry SwiftUI 8/8" },
+      { id: 248, title: "248.Working with two side by side views in SwiftUI", category: "SnowSeeker SwiftUI Tutorial 1/12" },
+      { id: 249, title: "249.Using alert() and sheet() with optionals", category: "SnowSeeker SwiftUI Tutorial 2/12" },
+      { id: 250, title: "250.Using groups as transparent layout containers", category: "SnowSeeker SwiftUI Tutorial 3/12" },
+      { id: 251, title: "251.Making a SwiftUI view searchable", category: "SnowSeeker SwiftUI Tutorial 4/12" },
+      { id: 252, title: "252.Sharing @Observable objects through SwiftUI's environment", category: "SnowSeeker SwiftUI Tutorial 5/12" },
+      { id: 253, title: "253.Building a primary list of items", category: "SnowSeeker SwiftUI Tutorial 6/12" },
+      { id: 254, title: "254.Presenting a default detail view on iPad", category: "SnowSeeker SwiftUI Tutorial 7/12" },
+      { id: 255, title: "255.Creating a detail view for resorts", category: "SnowSeeker SwiftUI Tutorial 8/12" },
+      { id: 256, title: "256.Searching for data in a List", category: "SnowSeeker SwiftUI Tutorial 9/12" },
+      { id: 257, title: "257.Changing a view’s layout in response to size classes", category: "SnowSeeker SwiftUI Tutorial 10/12" },
+      { id: 258, title: "258.Binding an alert to an optional string", category: "SnowSeeker SwiftUI Tutorial 11/12" },
+      { id: 259, title: "259.Letting the user mark favorites", category: "SnowSeeker SwiftUI Tutorial 12/12" },
+
+        ];
+
+        // State management
+        let tutorialState = {};
+        let currentUntickTutorial = null;
+        let longPressTimer = null;
+
+        // Initialize the app
+        function initApp() {
+            loadState();
+            renderTutorialList();
+            updateProgress();
+            setupEventHandlers();
+        }
+
+        // Load state from localStorage
+        function loadState() {
+            const savedState = localStorage.getItem('swiftCheckersState');
+            if (savedState) {
+                tutorialState = JSON.parse(savedState);
+            } else {
+                // Initialize default state
+                tutorials.forEach(tutorial => {
+                    tutorialState[tutorial.id] = {
+                        completed: false,
+                        completedAt: ''
+                    };
+                });
+            }
+        }
+
+        // Save state to localStorage
+        function saveState() {
+            localStorage.setItem('swiftCheckersState', JSON.stringify(tutorialState));
+        }
+
+        // Render the tutorial list
+        function renderTutorialList() {
+            const listContainer = document.getElementById('tutorial-list');
+            listContainer.innerHTML = '';
+
+            tutorials.forEach(tutorial => {
+                const tutorialData = tutorialState[tutorial.id] || { completed: false, completedAt: '' };
+                const isCompleted = tutorialData.completed;
+                const completedDate = isCompleted ? tutorialData.completedAt : '';
+                
+                const tutorialCard = document.createElement('div');
+                tutorialCard.className = `tutorial-card rounded-2xl overflow-hidden ${isCompleted ? 'bg-blue-500/10' : 'bg-gray-800/20'}`;
+                tutorialCard.innerHTML = `
+                    <div class="relative ${isCompleted ? 'bg-gradient-to-r from-blue-500/10 to-green-500/10' : 'bg-gray-800/5'}">
+                        <div class="p-4">
+                            <div class="flex items-start">
+                                <div class="checkbox-container relative mr-3" data-id="${tutorial.id}">
+                                    <div class="relative">
+                                        <button class="checkbox w-8 h-8 rounded-full flex items-center justify-center ${isCompleted ? 'bg-blue-500 scale-110' : 'bg-gray-600/30'}" 
+                                                aria-label="${isCompleted ? 'Mark as not completed' : 'Mark as completed'}">
+                                            <svg class="w-5 h-5 ${isCompleted ? '' : 'hidden'}" viewBox="0 0 24 24" fill="none">
+                                                <path class="checkmark" d="M5 13l4 4L19 7" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                                            </svg>
+                                        </button>
+                                        ${isCompleted ? `
+                                            <div class="untick-overlay absolute inset-0 bg-red-500/30 rounded-full opacity-0 scale-50 transition-all duration-300 pointer-events-none"></div>
+                                            <div class="untick-timer absolute inset-0 rounded-full border-2 border-red-500 opacity-0 transition-all duration-300 pointer-events-none flex items-center justify-center" style="transform-origin: center; transform: scale(0);">
+                                                <span class="countdown-text text-white font-bold text-xl transition-transform duration-100">4</span>
+                                            </div>
+                                        ` : ''}
+                                    </div>
+                                </div>
+                                <div class="flex-1">
+                                    <div class="inline-block text-xs font-medium px-2 py-1 rounded-lg bg-blue-500/20 text-blue-400 mb-1">
+                                        ${tutorial.category}
+                                    </div>
+                                    <h3 class="text-base font-medium leading-snug">${tutorial.title.startsWith(tutorial.id + '.') ? tutorial.title : tutorial.id + '. ' + tutorial.title}</h3>
+                                    ${tutorial.youtubeLink ? `<button class="youtube-btn mt-2 px-3 py-1 bg-red-600 hover:bg-red-700 text-white text-xs rounded flex items-center" data-youtube="${tutorial.youtubeLink}" aria-label="Watch on YouTube">
+                                        <svg class="w-4 h-4 mr-1" fill="currentColor" viewBox="0 0 24 24"><path d="M23.498 6.186a2.994 2.994 0 0 0-2.11-2.117C19.145 3.5 12 3.5 12 3.5s-7.145 0-9.388.569A2.994 2.994 0 0 0 .502 6.186C0 8.432 0 12 0 12s0 3.568.502 5.814a2.994 2.994 0 0 0 2.11 2.117C4.855 20.5 12 20.5 12 20.5s7.145 0 9.388-.569a2.994 2.994 0 0 0 2.11-2.117C24 15.568 24 12 24 12s0-3.568-.502-5.814zM9.545 15.568V8.432L15.818 12l-6.273 3.568z"/></svg>
+                                        YouTube
+                                    </button>` : ''}
+                                    ${isCompleted && completedDate ? `
+                                        <div class="text-xs mt-1.5 text-green-400 font-medium flex items-center">
+                                            <svg class="w-3 h-3 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+                                            </svg>
+                                            ${completedDate}
+                                        </div>
+                                    ` : ''}
+
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                `;
+                listContainer.appendChild(tutorialCard);
+            });
+            // Add click event listeners for YouTube buttons
+            document.querySelectorAll('.youtube-btn').forEach(btn => {
+                btn.addEventListener('click', function(e) {
+                    e.stopPropagation();
+                    const link = this.getAttribute('data-youtube');
+                    if (link) window.open(link, '_blank');
+                });
+            });
+        }
+
+        // Update progress display
+        function updateProgress() {
+            const total = tutorials.length;
+            const completed = Object.values(tutorialState).filter(t => t.completed).length;
+            const percent = Math.round((completed / total) * 100);
+            
+            document.getElementById('progress-count').textContent = `${completed} / ${total}`;
+            document.getElementById('progress-percent').textContent = `${percent}% Complete`;
+            
+            const progressBar = document.querySelector('.progress-fill');
+            progressBar.style.width = `${percent}%`;
+        }
+
+        // Toggle tutorial completion
+        function toggleCompletion(tutorialId, completed) {
+            const tutorial = tutorialState[tutorialId];
+            
+            if (completed) {
+                const now = new Date();
+                const dateStr = now.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }) +
+                                ', ' + now.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' });
+                
+                tutorialState[tutorialId] = {
+                    completed: true,
+                    completedAt: dateStr
+                };
+            } else {
+                tutorialState[tutorialId] = {
+                    completed: false,
+                    completedAt: ''
+                };
+            }
+            
+            saveState();
+            renderTutorialList();
+            updateProgress();
+        }
+
+        // Setup event handlers
+        function setupEventHandlers() {
+            // Track tap counts and timing
+            const tapData = new Map(); // tutorialId -> { count: number, lastTapTime: number, timer: number }
+            const TAP_THRESHOLD = 300; // ms between taps to count as part of sequence
+            const TAPS_REQUIRED = 4; // Number of taps needed
+            
+            // Click handler for checkboxes - delegate to document level
+            document.addEventListener('click', (e) => {
+                const checkbox = e.target.closest('.checkbox');
+                if (!checkbox) return;
+                
+                // Prevent default to avoid any potential issues
+                e.preventDefault();
+                e.stopPropagation();
+                
+                const container = checkbox.closest('.checkbox-container');
+                if (!container) return;
+                
+                const tutorialId = parseInt(container.dataset.id);
+                const tutorial = tutorialState[tutorialId] || { completed: false };
+                
+                // For uncompleted tutorials, just toggle on first click
+                if (!tutorial.completed) {
+                    toggleCompletion(tutorialId, true);
+                    return;
+                }
+                
+                // For completed tutorials, handle tap sequence
+                const now = Date.now();
+                const tapInfo = tapData.get(tutorialId) || { count: 0, lastTapTime: 0, timer: null };
+                
+                // Clear any existing timer
+                if (tapInfo.timer) {
+                    clearTimeout(tapInfo.timer);
+                }
+                
+                // Check if taps are within the threshold
+                if (now - tapInfo.lastTapTime > TAP_THRESHOLD) {
+                    tapInfo.count = 0; // Reset if too much time passed
+                }
+                
+                tapInfo.count++;
+                tapInfo.lastTapTime = now;
+                
+                // If we have enough taps, start the countdown
+                if (tapInfo.count >= TAPS_REQUIRED) {
+                    tapInfo.count = 0;
+                    startLongPress({ target: checkbox });
+                } else {
+                    // Set a timer to reset the tap count if user doesn't complete the sequence
+                    tapInfo.timer = setTimeout(() => {
+                        tapData.set(tutorialId, { count: 0, lastTapTime: 0, timer: null });
+                    }, TAP_THRESHOLD);
+                }
+                
+                tapData.set(tutorialId, tapInfo);
+            });
+            
+            let longPressTimer = null;
+            let animationFrameId = null;
+            
+            const startLongPress = (e) => {
+                const checkbox = e.target.closest('.checkbox');
+                if (!checkbox) return;
+                
+                const container = checkbox.closest('.checkbox-container');
+                const tutorialId = parseInt(container.dataset.id);
+                const tutorial = tutorialState[tutorialId] || { completed: false };
+                
+                // Only allow long-press uncheck if the tutorial is completed
+                if (!tutorial.completed || container.classList.contains('untick-active')) {
+                    return;
+                }
+                
+                // Start long press
+                container.classList.add('untick-active');
+                const overlay = container.querySelector('.untick-overlay');
+                const timer = container.querySelector('.untick-timer');
+                
+                // Initial hold time before showing countdown (4 seconds)
+                const initialHoldTime = 4000;
+                let startTime = null;
+                let countdownStartTime = null;
+                let isCountingDown = false;
+                
+                // Total countdown time (4 seconds)
+                const totalCountdownTime = 4000;
+                const countdownDuration = 4; // 4 seconds countdown
+                
+                // Show initial hold indicator
+                if (overlay) {
+                    overlay.style.opacity = '0.3';
+                    overlay.style.transform = 'scale(1)';
+                }
+                
+                // Start the hold and countdown
+                const updateCountdown = (timestamp) => {
+                    if (!startTime) {
+                        startTime = timestamp;
+                        return requestAnimationFrame(updateCountdown);
+                    }
+                    
+                    const elapsed = timestamp - startTime;
+                    
+                    // Check if we should start the countdown (after 4 seconds)
+                    if (!isCountingDown && elapsed >= initialHoldTime) {
+                        isCountingDown = true;
+                        countdownStartTime = timestamp;
+                        
+                        // Show the timer
+                        if (timer) {
+                            timer.style.opacity = '1';
+                            const countdownText = timer.querySelector('.countdown-text');
+                            if (countdownText) countdownText.textContent = countdownDuration.toString();
+                        }
+                    }
+                    
+                    // If still in initial hold phase, just continue
+                    if (!isCountingDown) {
+                        // Update hold progress (optional: show some visual feedback)
+                        const holdProgress = elapsed / initialHoldTime;
+                        if (overlay) {
+                            overlay.style.opacity = (0.3 + (holdProgress * 0.7)).toString();
+                        }
+                        return requestAnimationFrame(updateCountdown);
+                    }
+                    
+                    // We're in the countdown phase
+                    const countdownElapsed = timestamp - countdownStartTime;
+                    const progress = Math.min(countdownElapsed / totalCountdownTime, 1);
+                    
+                    // Calculate remaining time (4, 3, 2, 1)
+                    const remainingTime = Math.max(0, Math.ceil(countdownDuration - (countdownElapsed / 1000)));
+                    
+                    // Update UI with smoother scaling
+                    const scale = 0.8 + (progress * 0.4);
+                    // Smooth border width from 2px to 4px
+                    const borderWidth = 2 + (progress * 2);
+                    
+                    // Update overlay with smooth fade-in
+                    if (overlay) {
+                        overlay.style.opacity = Math.min(0.3 + (progress * 0.7), 1).toString();
+                        overlay.style.transform = `scale(${scale})`;
+                    }
+                    
+                    // Update timer circle
+                    if (timer) {
+                        timer.style.transform = `scale(${scale})`;
+                        timer.style.borderWidth = `${borderWidth}px`;
+                        
+                        // Update countdown number
+                        const countdownText = timer.querySelector('.countdown-text');
+                        if (countdownText && countdownText.textContent !== remainingTime.toString()) {
+                            countdownText.textContent = remainingTime || '';
+                            
+                            // Only animate if we have a valid number
+                            if (remainingTime > 0) {
+                                countdownText.style.transform = 'scale(1.4)';
+                                countdownText.style.transition = 'transform 150ms ease-out';
+                                
+                                // Reset scale after animation
+                                requestAnimationFrame(() => {
+                                    if (countdownText) {
+                                        countdownText.style.transform = 'scale(1)';
+                                    }
+                                });
+                            }
+                        }
+                    }
+                    
+                    // Continue or complete
+                    if (progress < 1) {
+                        animationFrameId = requestAnimationFrame(updateCountdown);
+                    } else {
+                        // Ensure we show 0 before completing
+                        const countdownText = timer?.querySelector('.countdown-text');
+                        if (countdownText) countdownText.textContent = '0';
+                        
+                        // Small delay to show 0 before toggling
+                        setTimeout(() => {
+                            toggleCompletion(tutorialId, false);
+                            cleanup();
+                        }, 100);
+                    }
+                };
+                
+                // Cleanup function
+                const cleanup = () => {
+                    if (animationFrameId !== null) {
+                        cancelAnimationFrame(animationFrameId);
+                        animationFrameId = null;
+                    }
+                    
+                    if (container) container.classList.remove('untick-active');
+                    
+                    if (overlay) {
+                        overlay.style.opacity = '0';
+                        overlay.style.transform = 'scale(0.5)';
+                    }
+                    
+                    if (timer) {
+                        timer.style.opacity = '0';
+                        timer.style.transform = 'scale(0)';
+                        const countdownText = timer.querySelector('.countdown-text');
+                        if (countdownText) {
+                            countdownText.textContent = '3';
+                            countdownText.style.transform = 'scale(1)';
+                        }
+                    }
+                    
+                    // No message to hide
+                    
+                    longPressTimer = null;
+                };
+                
+                // Store cleanup reference
+                longPressTimer = {
+                    container,
+                    cleanup: cleanup
+                };
+                
+                // Start the animation
+                updateCountdown.lastUpdate = -1;
+                requestAnimationFrame(updateCountdown);
+                
+                // Add event listeners for cleanup
+                const endLongPress = () => {
+                    if (longPressTimer) {
+                        longPressTimer.cleanup();
+                        longPressTimer = null;
+                    }
+                    document.removeEventListener('mouseup', endLongPress);
+                    document.removeEventListener('touchend', endLongPress);
+                };
+                
+                document.addEventListener('mouseup', endLongPress, { once: true });
+                document.addEventListener('touchend', endLongPress, { once: true });
+            };
+            
+            // Modified startLongPress to work with tap sequence
+            const originalStartLongPress = startLongPress;
+            startLongPress = (e) => {
+                const checkbox = e.target.closest('.checkbox');
+                if (!checkbox) return;
+                
+                const container = checkbox.closest('.checkbox-container');
+                const tutorialId = parseInt(container.dataset.id);
+                const tutorial = tutorialState[tutorialId] || { completed: false };
+                
+                // Only proceed if tutorial is completed
+                if (!tutorial.completed || container.classList.contains('untick-active')) {
+                    return;
+                }
+                
+                // Start the countdown immediately since we already have 4 taps
+                container.classList.add('untick-active');
+                const overlay = container.querySelector('.untick-overlay');
+                const timer = container.querySelector('.untick-timer');
+                
+                // Show the timer immediately with initial value 4
+                if (timer) {
+                    timer.style.opacity = '1';
+                    const countdownText = timer.querySelector('.countdown-text');
+                    if (countdownText) countdownText.textContent = '4';
+                }
+                
+                let startTime = null;
+                const totalTime = 4000; // 4 seconds
+                const countdownDuration = 4; // 4 seconds countdown
+                
+                // Start the countdown
+                const updateCountdown = (timestamp) => {
+                    if (!startTime) {
+                        startTime = timestamp;
+                        return requestAnimationFrame(updateCountdown);
+                    }
+                    
+                    const elapsed = timestamp - startTime;
+                    const progress = Math.min(elapsed / totalTime, 1);
+                    
+                    // Calculate remaining time (4, 3, 2, 1)
+                    const remainingTime = Math.max(0, Math.ceil(countdownDuration - (elapsed / 1000)));
+                    
+                    // Update UI with smoother scaling
+                    const scale = 0.8 + (progress * 0.4);
+                    const borderWidth = 2 + (progress * 2);
+                    
+                    // Update overlay with smooth fade-in
+                    if (overlay) {
+                        overlay.style.opacity = Math.min(0.3 + (progress * 0.7), 1).toString();
+                        overlay.style.transform = `scale(${scale})`;
+                    }
+                    
+                    // Update timer circle
+                    if (timer) {
+                        timer.style.transform = `scale(${scale})`;
+                        timer.style.borderWidth = `${borderWidth}px`;
+                        
+                        // Update countdown number
+                        const countdownText = timer.querySelector('.countdown-text');
+                        if (countdownText && countdownText.textContent !== remainingTime.toString()) {
+                            countdownText.textContent = remainingTime || '';
+                            
+                            // Only animate if we have a valid number
+                            if (remainingTime > 0) {
+                                countdownText.style.transform = 'scale(1.4)';
+                                countdownText.style.transition = 'transform 150ms ease-out';
+                                
+                                // Reset scale after animation
+                                requestAnimationFrame(() => {
+                                    if (countdownText) {
+                                        countdownText.style.transform = 'scale(1)';
+                                    }
+                                });
+                            }
+                        }
+                    }
+                    
+                    // Continue or complete
+                    if (progress < 1) {
+                        animationFrameId = requestAnimationFrame(updateCountdown);
+                    } else {
+                        // Complete the action
+                        const container = checkbox.closest('.checkbox-container');
+                        const tutorialId = parseInt(container.dataset.id);
+                        toggleCompletion(tutorialId, false);
+                        
+                        // Clean up
+                        if (longPressTimer) {
+                            longPressTimer.cleanup();
+                            longPressTimer = null;
+                        }
+                    }
+                };
+                
+                // Start the animation
+                updateCountdown.lastUpdate = -1;
+                animationFrameId = requestAnimationFrame(updateCountdown);
+                
+                // Store cleanup reference
+                longPressTimer = {
+                    container,
+                    cleanup: () => {
+                        if (animationFrameId) {
+                            cancelAnimationFrame(animationFrameId);
+                            animationFrameId = null;
+                        }
+                        
+                        if (container) {
+                            container.classList.remove('untick-active');
+                            
+                            const overlay = container.querySelector('.untick-overlay');
+                            const timer = container.querySelector('.untick-timer');
+                            
+                            if (overlay) {
+                                overlay.style.opacity = '0';
+                                overlay.style.transform = 'scale(0.5)';
+                            }
+                            
+                            if (timer) {
+                                timer.style.opacity = '0';
+                                timer.style.transform = 'scale(0)';
+                                const countdownText = timer.querySelector('.countdown-text');
+                                if (countdownText) {
+                                    countdownText.textContent = '4';
+                                    countdownText.style.transform = 'scale(1)';
+                                }
+                            }
+                        }
+                    }
+                };
+            };
+            
+            // Clean up if mouse leaves the window during long press
+            document.addEventListener('mouseleave', () => {
+                if (longPressTimer) {
+                    longPressTimer.cleanup();
+                    longPressTimer = null;
+                }
+            });
+            
+            // Clean up on window blur (e.g., when switching tabs)
+            window.addEventListener('blur', () => {
+                if (longPressTimer) {
+                    longPressTimer.cleanup();
+                    longPressTimer = null;
+                }
+            });
+            
+            // Modal handlers
+            document.getElementById('cancel-untick').addEventListener('click', () => {
+                document.getElementById('untick-modal').classList.add('hidden');
+            });
+            
+            document.getElementById('confirm-untick').addEventListener('click', () => {
+                if (currentUntickTutorial !== null) {
+                    toggleCompletion(currentUntickTutorial, false);
+                    document.getElementById('untick-modal').classList.add('hidden');
+                    currentUntickTutorial = null;
+                }
+            });
+        }
+
+        // Associate each tutorial with its corresponding YouTube link
+        tutorials.forEach((tutorial, i) => {
+            tutorial.youtubeLink = youtubeLinks[i] || null;
+        });
+
+        // Initialize the app when DOM is loaded
+        document.addEventListener('DOMContentLoaded', initApp);
+    </script>
+</body>
+</html>
