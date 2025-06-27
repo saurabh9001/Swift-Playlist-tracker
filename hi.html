@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
+  <script>
+    const firebaseConfig = {
+      apiKey: "AIzaSyC_qKkryDOurbuxus53IKD-LZTFTwOcyiA",
+      authDomain: "swift-57396.firebaseapp.com",
+      projectId: "swift-57396",
+      storageBucket: "swift-57396.firebasestorage.app",
+      messagingSenderId: "637513218600",
+      appId: "1:637513218600:web:094f56395070fde52c131d",
+      measurementId: "G-3GY7240XCR"
+    };
+    firebase.initializeApp(firebaseConfig);
+  </script>
+  <script>
+    console.log('Before Firebase test');
+    firebase.firestore().collection('connection_test').add({
+      timestamp: new Date().toISOString(),
+      message: 'Hello from minimal test!'
+    })
+    .then(() => {
+      console.log('✅ Firestore connection: SUCCESS');
+    })
+    .catch((error) => {
+      console.error('❌ Firestore connection: ERROR', error);
+    });
+    console.log('After Firebase test');
+  </script>
+</head>
+<body>
+  <h1>Firebase Test</h1>
+</body>
+</html>

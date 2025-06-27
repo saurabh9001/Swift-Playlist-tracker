@@ -767,7 +767,7 @@
                         <div class="p-4">
                             <div class="flex items-start">
                                 <div class="checkbox-container relative mr-3" data-id="${tutorial.id}">
-    <input type="checkbox" class="tutorial-checkbox absolute left-0 top-0 w-8 h-8 opacity-0 cursor-pointer" data-tutorial-id="${tutorial.id}" ${isCompleted ? "checked" : ""} tabindex="-1" aria-hidden="true">
+    <input type="checkbox" class="tutorial-checkbox absolute left-0 top-0 w-8 h-8 opacity-0 cursor-pointer" data-tutorial-id="${tutorial.id}" id="tutorial-checkbox-${tutorial.id}" name="tutorial-checkbox-${tutorial.id}" ${isCompleted ? "checked" : ""} tabindex="-1" aria-hidden="true">
 
                                     <div class="relative">
                                         <button class="checkbox w-8 h-8 rounded-full flex items-center justify-center ${isCompleted ? 'bg-blue-500 scale-110' : 'bg-gray-600/30'}" 
@@ -817,12 +817,16 @@
                     if (link) window.open(link, '_blank');
                 });
             });
+            // Add change event listeners for Firestore sync on tutorial-checkboxes
+            document.querySelectorAll('.tutorial-checkbox').forEach(cb => {
+                cb.addEventListener('change', saveTutorialState);
+            });
         }
 
         // Update progress display
         function updateProgress() {
             const total = tutorials.length;
-            const completed = Object.values(tutorialState).filter(t => t.completed).length;
+const completed = Object.values(tutorialState).filter(t => t.completed).length;
             const percent = Math.round((completed / total) * 100);
             
             document.getElementById('progress-count').textContent = `${completed} / ${total}`;
@@ -1354,9 +1358,6 @@
 
     document.addEventListener('DOMContentLoaded', function() {
       loadTutorialState();
-      document.querySelectorAll('.tutorial-checkbox').forEach(cb => {
-        cb.addEventListener('change', saveTutorialState);
-      });
     });
     // --- End Firebase Firestore Sync & State Functions ---
   </script>
