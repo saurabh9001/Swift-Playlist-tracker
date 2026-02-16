@@ -1,0 +1,461 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>DSA & Coding Interview Tracker</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Firebase App (the core Firebase SDK) -->
+    <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
+    <script>
+      const firebaseConfig = {
+        apiKey: "AIzaSyC_qKkryDOurbuxus53IKD-LZTFTwOcyiA",
+        authDomain: "swift-57396.firebaseapp.com",
+        projectId: "swift-57396",
+        storageBucket: "swift-57396.firebasestorage.app",
+        messagingSenderId: "637513218600",
+        appId: "1:637513218600:web:094f56395070fde52c131d",
+        measurementId: "G-3GY7240XCR"
+      };
+      
+      firebase.initializeApp(firebaseConfig);
+      firebase.auth().setPersistence(firebase.auth.Auth.Persistence.LOCAL);
+    </script>
+    <style>
+        @keyframes wave1 {
+            0% { transform: translateX(0) translateY(0); }
+            50% { transform: translateX(50%) translateY(-20px); }
+            100% { transform: translateX(100%) translateY(0); }
+        }
+        
+        @keyframes wave2 {
+            0% { transform: translateX(0) translateY(0); }
+            50% { transform: translateX(-30%) translateY(15px); }
+            100% { transform: translateX(0) translateY(0); }
+        }
+
+        .wave-background {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            height: 40vh;
+            overflow: hidden;
+            z-index: -1;
+        }
+
+        .wave1 {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            width: 200%;
+            height: 100%;
+            background: linear-gradient(to top, rgba(236, 72, 153, 0.15), rgba(236, 72, 153, 0.05));
+            border-radius: 50% 50% 0 0;
+            animation: wave1 15s linear infinite;
+        }
+
+        .wave2 {
+            position: absolute;
+            bottom: 0;
+            left: -50%;
+            width: 200%;
+            height: 80%;
+            background: linear-gradient(to top, rgba(139, 92, 246, 0.12), rgba(139, 92, 246, 0.04));
+            border-radius: 48% 52% 0 0;
+            animation: wave2 20s linear infinite;
+        }
+
+        .glass-card {
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+
+        .tutorial-card {
+            transition: all 0.3s ease;
+        }
+
+        .progress-bar {
+            overflow: hidden;
+            position: relative;
+        }
+
+        .progress-fill {
+            position: absolute;
+            top: 0;
+            background: linear-gradient(to right, #ec4899, #8b5cf6);
+            transition: width 1s ease;
+        }
+
+        .wave-progress {
+            position: absolute;
+            width: 200%;
+            height: 100%;
+            background: linear-gradient(90deg, rgba(255,255,255,0.3) 0%, rgba(255,255,255,0) 50%);
+            animation: progressWave 3s linear infinite;
+        }
+
+        @keyframes progressWave {
+            0% { transform: translateX(-50%); }
+            100% { transform: translateX(0); }
+        }
+    </style>
+</head>
+<body class="min-h-screen bg-gray-900 text-white font-sans">
+    <div class="wave-background">
+        <div class="wave1"></div>
+        <div class="wave2"></div>
+    </div>
+
+    <div class="container mx-auto px-4 py-8 max-w-5xl">
+        <!-- Header -->
+        <div class="glass-card rounded-3xl shadow-lg mb-6 overflow-hidden">
+            <div class="bg-gradient-to-r from-pink-500/20 to-purple-500/20 p-6">
+                <h1 class="text-2xl md:text-3xl font-bold text-center bg-gradient-to-r from-pink-400 to-purple-400 bg-clip-text text-transparent">DSA & Coding Interview Mastery</h1>
+                <p class="text-center text-sm mt-2 text-gray-300">Complete Interview Preparation • 5+ Hours • 70+ Topics</p>
+            </div>
+        </div>
+
+        <!-- Progress Section -->
+        <div class="glass-card rounded-3xl shadow-lg mb-6 overflow-hidden">
+            <div class="bg-gradient-to-b from-pink-500/20 to-purple-500/20 p-6">
+                <div class="flex justify-between items-center mb-4">
+                    <h2 class="text-xl font-semibold">Progress</h2>
+                    <div id="progress-count" class="text-lg font-bold text-pink-400">0 / 70</div>
+                </div>
+                
+                <div class="progress-bar h-3 rounded-full bg-white/10 mb-4 relative">
+                    <div class="progress-fill rounded-full" id="progress-fill" style="width: 0%">
+                        <div class="wave-progress"></div>
+                    </div>
+                </div>
+                
+                <div id="progress-percent" class="text-sm text-white/80">0% Complete</div>
+            </div>
+        </div>
+
+        <!-- Tutorial List -->
+        <div id="tutorial-list" class="space-y-3">
+            <!-- Tutorial cards will be inserted here -->
+        </div>
+    </div>
+
+    <!-- Notification Toast -->
+    <div id="notification-toast" class="fixed bottom-20 right-4 bg-green-500 text-white px-4 py-2 rounded-lg shadow-lg transform translate-y-10 opacity-0 transition-all duration-300 z-50">
+        <div class="flex items-center">
+            <span id="notification-text"></span>
+        </div>
+    </div>
+
+    <!-- Navigation & Authentication Buttons -->
+    <div class="fixed bottom-4 right-4 z-50 flex flex-col space-y-2">
+        <a href="index.html" class="px-4 py-2 bg-gradient-to-r from-blue-600 to-pink-600 hover:from-blue-500 hover:to-pink-500 text-white rounded-full shadow-lg transition-all hover:scale-105 flex items-center">
+            <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"/>
+            </svg>
+            Home
+        </a>
+        <button id="google-signin-btn" class="px-4 py-2 bg-gradient-to-r from-pink-600 to-purple-600 hover:from-pink-500 hover:to-purple-500 text-white rounded-full shadow-lg transition-all hover:scale-105 flex items-center">
+            <svg class="w-5 h-5 mr-2" fill="white" viewBox="0 0 24 24" aria-hidden="true">
+                <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4"/>
+                <path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853"/>
+                <path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l3.66-2.84z" fill="#FBBC05"/>
+                <path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335"/>
+            </svg>
+            Sign in
+        </button>
+        <button id="signout-btn" class="px-4 py-2 bg-gray-600 hover:bg-gray-700 text-white rounded-full shadow-lg transition-all hover:scale-105 flex items-center hidden">
+            <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"></path>
+            </svg>
+            Sign out
+        </button>
+    </div>
+
+    <script>
+        // Notification function
+        function showNotification(message, isError = false) {
+            const toast = document.getElementById('notification-toast');
+            const text = document.getElementById('notification-text');
+            
+            text.textContent = message;
+            toast.className = `fixed bottom-20 right-4 ${isError ? 'bg-red-500' : 'bg-green-500'} text-white px-4 py-2 rounded-lg shadow-lg transform translate-y-0 opacity-100 transition-all duration-300 z-50 flex items-center`;
+            
+            setTimeout(() => {
+                toast.className = 'fixed bottom-20 right-4 bg-green-500 text-white px-4 py-2 rounded-lg shadow-lg transform translate-y-10 opacity-0 transition-all duration-300 z-50';
+            }, 3000);
+        }
+
+        // Video URL base
+        const baseVideoUrl = "https://youtu.be/lvO88XxNAzs";
+
+        // Tutorial data with timestamps
+        const tutorials = [
+            { id: 1, title: "Intro", category: "Introduction", timestamp: "0:00:00", seconds: 0 },
+            { id: 2, title: "Steps to get Hired into Tech", category: "Career Guidance", timestamp: "0:00:40", seconds: 40 },
+            { id: 3, title: "Big O Notation", category: "Fundamentals", timestamp: "0:05:39", seconds: 339 },
+            { id: 4, title: "Problem Solving Techniques", category: "Fundamentals", timestamp: "0:11:57", seconds: 717 },
+            { id: 5, title: "Contains Duplicate", category: "Arrays", timestamp: "0:15:04", seconds: 904 },
+            { id: 6, title: "Missing Number", category: "Arrays", timestamp: "0:16:51", seconds: 1011 },
+            { id: 7, title: "Note: Sorting, Dictionary, Lambdas", category: "Arrays", timestamp: "0:19:36", seconds: 1176 },
+            { id: 8, title: "Find All Numbers Disappeared in an Array", category: "Arrays", timestamp: "0:20:09", seconds: 1209 },
+            { id: 9, title: "Two Sum", category: "Arrays", timestamp: "0:23:19", seconds: 1399 },
+            { id: 10, title: "Note: Java vs Python - Final Value After Operations", category: "Arrays", timestamp: "0:28:32", seconds: 1712 },
+            { id: 11, title: "How Many Numbers Are Smaller Than the Current Number", category: "Arrays", timestamp: "0:30:08", seconds: 1808 },
+            { id: 12, title: "Minimum Time Visiting All Points", category: "Arrays", timestamp: "0:34:29", seconds: 2069 },
+            { id: 13, title: "Spiral Matrix", category: "Arrays", timestamp: "0:39:12", seconds: 2352 },
+            { id: 14, title: "Number of Islands", category: "Arrays", timestamp: "0:44:40", seconds: 2680 },
+            { id: 15, title: "Best Time to Buy and Sell Stock", category: "Two Pointers", timestamp: "0:54:50", seconds: 3290 },
+            { id: 16, title: "Squares of a Sorted Array", category: "Two Pointers", timestamp: "1:00:42", seconds: 3642 },
+            { id: 17, title: "3Sum", category: "Two Pointers", timestamp: "1:12:20", seconds: 4340 },
+            { id: 18, title: "Longest Mountain in Array", category: "Two Pointers", timestamp: "1:21:06", seconds: 4866 },
+            { id: 19, title: "Contains Duplicate II", category: "Sliding Window", timestamp: "1:25:38", seconds: 5138 },
+            { id: 20, title: "Minimum Absolute Difference", category: "Sliding Window", timestamp: "1:29:57", seconds: 5397 },
+            { id: 21, title: "Minimum Size Subarray Sum", category: "Sliding Window", timestamp: "1:33:19", seconds: 5599 },
+            { id: 22, title: "Single Number", category: "Bit Manipulation", timestamp: "1:38:36", seconds: 5916 },
+            { id: 23, title: "Coin Change", category: "Dynamic Programming", timestamp: "1:44:09", seconds: 6249 },
+            { id: 24, title: "Climbing Stairs", category: "Dynamic Programming", timestamp: "1:56:11", seconds: 6971 },
+            { id: 25, title: "Maximum Subarray", category: "Dynamic Programming", timestamp: "1:59:33", seconds: 7173 },
+            { id: 26, title: "Counting Bits", category: "Dynamic Programming", timestamp: "2:02:39", seconds: 7359 },
+            { id: 27, title: "Range Sum Query - Immutable", category: "Dynamic Programming", timestamp: "2:11:28", seconds: 7888 },
+            { id: 28, title: "Letter Case Permutation", category: "Backtracking", timestamp: "2:14:50", seconds: 8090 },
+            { id: 29, title: "Subsets", category: "Backtracking", timestamp: "2:20:43", seconds: 8443 },
+            { id: 30, title: "Combinations", category: "Backtracking", timestamp: "2:28:22", seconds: 8902 },
+            { id: 31, title: "Permutations", category: "Backtracking", timestamp: "2:34:42", seconds: 9282 },
+            { id: 32, title: "Middle of Linked List", category: "Linked Lists", timestamp: "2:41:54", seconds: 9714 },
+            { id: 33, title: "Linked List Cycle", category: "Linked Lists", timestamp: "2:43:58", seconds: 9838 },
+            { id: 34, title: "Reverse Linked List", category: "Linked Lists", timestamp: "2:46:24", seconds: 9984 },
+            { id: 35, title: "Remove Linked List Elements", category: "Linked Lists", timestamp: "2:49:39", seconds: 10179 },
+            { id: 36, title: "Reverse Linked List II", category: "Linked Lists", timestamp: "2:54:42", seconds: 10482 },
+            { id: 37, title: "Palindrome Linked List", category: "Linked Lists", timestamp: "3:01:25", seconds: 10885 },
+            { id: 38, title: "Merge Two Sorted Lists", category: "Linked Lists", timestamp: "3:06:01", seconds: 11161 },
+            { id: 39, title: "Min Stack", category: "Stacks", timestamp: "3:10:11", seconds: 11411 },
+            { id: 40, title: "Valid Parentheses", category: "Stacks", timestamp: "3:15:22", seconds: 11722 },
+            { id: 41, title: "Evaluate Reverse Polish Notation", category: "Stacks", timestamp: "3:19:53", seconds: 11993 },
+            { id: 42, title: "Stack Sorting", category: "Stacks", timestamp: "3:25:53", seconds: 12353 },
+            { id: 43, title: "Implement Stack using Queues", category: "Queues", timestamp: "3:31:03", seconds: 12663 },
+            { id: 44, title: "Time Needed to Buy Tickets", category: "Queues", timestamp: "3:34:35", seconds: 12875 },
+            { id: 45, title: "Reverse the First K Elements of a Queue", category: "Queues", timestamp: "3:38:05", seconds: 13085 },
+            { id: 46, title: "Average of Levels in Binary Tree", category: "Binary Trees", timestamp: "3:40:45", seconds: 13245 },
+            { id: 47, title: "Minimum Depth of Binary Tree", category: "Binary Trees", timestamp: "3:45:14", seconds: 13514 },
+            { id: 48, title: "Maximum Depth of Binary Tree", category: "Binary Trees", timestamp: "3:47:24", seconds: 13644 },
+            { id: 49, title: "Min/Max Value Binary Tree", category: "Binary Trees", timestamp: "3:50:21", seconds: 13821 },
+            { id: 50, title: "Binary Tree Level Order Traversal", category: "Binary Trees", timestamp: "3:51:31", seconds: 13891 },
+            { id: 51, title: "Same Tree", category: "Binary Trees", timestamp: "3:53:57", seconds: 14037 },
+            { id: 52, title: "Path Sum", category: "Binary Trees", timestamp: "3:57:34", seconds: 14254 },
+            { id: 53, title: "Diameter of a Binary Tree", category: "Binary Trees", timestamp: "4:01:30", seconds: 14490 },
+            { id: 54, title: "Invert Binary Tree", category: "Binary Trees", timestamp: "4:07:19", seconds: 14839 },
+            { id: 55, title: "Lowest Common Ancestor of a Binary Tree", category: "Binary Trees", timestamp: "4:09:18", seconds: 14958 },
+            { id: 56, title: "Search in a Binary Search Tree", category: "Binary Search Trees", timestamp: "4:17:25", seconds: 15445 },
+            { id: 57, title: "Insert into a Binary Search Tree", category: "Binary Search Trees", timestamp: "4:19:11", seconds: 15551 },
+            { id: 58, title: "Convert Sorted Array to Binary Search Tree", category: "Binary Search Trees", timestamp: "4:21:06", seconds: 15666 },
+            { id: 59, title: "Two Sum IV - Input is a BST", category: "Binary Search Trees", timestamp: "4:26:24", seconds: 15984 },
+            { id: 60, title: "Lowest Common Ancestor of a Binary Search Tree", category: "Binary Search Trees", timestamp: "4:28:02", seconds: 16082 },
+            { id: 61, title: "Minimum Absolute Difference in BST", category: "Binary Search Trees", timestamp: "4:30:01", seconds: 16201 },
+            { id: 62, title: "Balance a Binary Search Tree", category: "Binary Search Trees", timestamp: "4:34:01", seconds: 16441 },
+            { id: 63, title: "Delete Node in a BST", category: "Binary Search Trees", timestamp: "4:35:52", seconds: 16552 },
+            { id: 64, title: "Kth Smallest Element in a BST", category: "Binary Search Trees", timestamp: "4:41:27", seconds: 16887 },
+            { id: 65, title: "Kth Largest Element in an Array", category: "Heaps", timestamp: "4:43:37", seconds: 17017 },
+            { id: 66, title: "K Closest Points to Origin", category: "Heaps", timestamp: "4:52:44", seconds: 17564 },
+            { id: 67, title: "Top K Frequent Elements", category: "Heaps", timestamp: "4:56:30", seconds: 17790 },
+            { id: 68, title: "Task Scheduler", category: "Heaps", timestamp: "4:59:06", seconds: 17946 },
+            { id: 69, title: "Breadth and Depth First Traversal", category: "Graphs", timestamp: "5:05:05", seconds: 18305 },
+            { id: 70, title: "Clone Graph", category: "Graphs", timestamp: "5:06:13", seconds: 18373 },
+            { id: 71, title: "Core Graph Operations", category: "Graphs", timestamp: "5:12:51", seconds: 18771 },
+            { id: 72, title: "Cheapest Flights Within K Stops", category: "Graphs", timestamp: "5:14:02", seconds: 18842 },
+            { id: 73, title: "Course Schedule", category: "Graphs", timestamp: "5:20:42", seconds: 19242 },
+            { id: 74, title: "Outro", category: "Conclusion", timestamp: "5:26:43", seconds: 19603 }
+        ];
+
+        // Generate YouTube URLs with timestamps
+        tutorials.forEach(tutorial => {
+            tutorial.youtubeLink = `${baseVideoUrl}?t=${tutorial.seconds}s`;
+        });
+
+        // Firebase Authentication
+        const db = firebase.firestore();
+        let stateDocRef = null;
+        let handlersReady = false;
+
+        function getDeviceId() {
+            let id = localStorage.getItem('deviceId_dsa');
+            if (!id) {
+                id = 'device-dsa-' + Math.random().toString(36).substr(2, 16);
+                localStorage.setItem('deviceId_dsa', id);
+            }
+            return id;
+        }
+
+        const auth = firebase.auth();
+        const provider = new firebase.auth.GoogleAuthProvider();
+        provider.addScope('email');
+        provider.addScope('profile');
+        
+        const signInBtn = document.getElementById('google-signin-btn');
+        const signOutBtn = document.getElementById('signout-btn');
+        
+        signInBtn.addEventListener('click', () => {
+            auth.signInWithPopup(provider).catch(err => console.error('Google sign-in error:', err));
+        });
+        
+        signOutBtn.addEventListener('click', () => auth.signOut());
+        
+        auth.onAuthStateChanged(user => {
+            if (user) {
+                signInBtn.classList.add('hidden');
+                signOutBtn.classList.remove('hidden');
+                showNotification('Signed in as ' + (user.displayName || user.email));
+                stateDocRef = db.collection('dsa_tutorials_state').doc(user.uid);
+            } else {
+                signInBtn.classList.remove('hidden');
+                signOutBtn.classList.add('hidden');
+                const deviceId = getDeviceId();
+                stateDocRef = db.collection('dsa_tutorials_state').doc(deviceId);
+            }
+            
+            if (!handlersReady) {
+                setupEventHandlers();
+                handlersReady = true;
+            }
+            
+            loadState();
+            renderTutorialList();
+            updateProgress();
+        });
+
+        function setupEventHandlers() {
+            // Event handlers will be set up after rendering
+        }
+
+        function renderTutorialList() {
+            const listContainer = document.getElementById('tutorial-list');
+            listContainer.innerHTML = '';
+            
+            tutorials.forEach(tutorial => {
+                const card = document.createElement('div');
+                card.className = 'glass-card rounded-2xl p-4 tutorial-card hover:scale-[1.02] cursor-pointer';
+                card.dataset.id = tutorial.id;
+                
+                card.innerHTML = `
+                    <div class="flex items-center justify-between">
+                        <div class="flex items-center flex-1">
+                            <input type="checkbox" 
+                                   class="tutorial-checkbox w-5 h-5 rounded border-2 border-pink-400 bg-white/10 checked:bg-gradient-to-br checked:from-pink-400 checked:to-purple-500 cursor-pointer mr-4"
+                                   data-tutorial-id="${tutorial.id}">
+                            <div class="flex-1">
+                                <div class="flex items-center space-x-2">
+                                    <span class="text-sm font-bold text-pink-400">#${tutorial.id}</span>
+                                    <span class="text-sm font-medium text-gray-400">${tutorial.timestamp}</span>
+                                    <span class="text-xs px-2 py-0.5 bg-gradient-to-r from-pink-500/30 to-purple-500/30 rounded-full">${tutorial.category}</span>
+                                </div>
+                                <h3 class="text-lg font-semibold mt-1">${tutorial.title}</h3>
+                            </div>
+                        </div>
+                        <a href="${tutorial.youtubeLink}" target="_blank" 
+                           class="ml-4 px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded-lg transition-all hover:scale-105 flex items-center space-x-2"
+                           onclick="event.stopPropagation()">
+                            <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
+                                <path d="M23.498 6.186a3.016 3.016 0 0 0-2.122-2.136C19.505 3.545 12 3.545 12 3.545s-7.505 0-9.377.505A3.017 3.017 0 0 0 .502 6.186C0 8.07 0 12 0 12s0 3.93.502 5.814a3.016 3.016 0 0 0 2.122 2.136c1.871.505 9.376.505 9.376.505s7.505 0 9.377-.505a3.015 3.015 0 0 0 2.122-2.136C24 15.93 24 12 24 12s0-3.93-.502-5.814zM9.545 15.568V8.432L15.818 12l-6.273 3.568z"/>
+                            </svg>
+                            <span>Watch</span>
+                        </a>
+                    </div>
+                `;
+                
+                const checkbox = card.querySelector('.tutorial-checkbox');
+                checkbox.addEventListener('change', (e) => {
+                    e.stopPropagation();
+                    toggleCompletion(tutorial.id, e.target.checked);
+                });
+                
+                card.addEventListener('click', (e) => {
+                    if (!e.target.closest('a') && !e.target.closest('input')) {
+                        checkbox.checked = !checkbox.checked;
+                        toggleCompletion(tutorial.id, checkbox.checked);
+                    }
+                });
+                
+                listContainer.appendChild(card);
+            });
+        }
+
+        function toggleCompletion(tutorialId, isChecked) {
+            saveTutorialState();
+            updateProgress();
+            
+            if (isChecked) {
+                showNotification(`✓ Completed: ${tutorials.find(t => t.id === tutorialId).title}`);
+            }
+        }
+
+        function updateProgress() {
+            const checkboxes = document.querySelectorAll('.tutorial-checkbox');
+            const checked = Array.from(checkboxes).filter(cb => cb.checked).length;
+            const total = tutorials.length;
+            const percentage = Math.round((checked / total) * 100);
+            
+            document.getElementById('progress-count').textContent = `${checked} / ${total}`;
+            document.getElementById('progress-percent').textContent = `${percentage}% Complete`;
+            document.getElementById('progress-fill').style.width = `${percentage}%`;
+        }
+
+        function saveTutorialState() {
+            const checkboxes = document.querySelectorAll('.tutorial-checkbox');
+            const state = {};
+            checkboxes.forEach(cb => {
+                state[cb.dataset.tutorialId] = cb.checked;
+            });
+            
+            if (stateDocRef) {
+                stateDocRef.set(state).catch(err => {
+                    console.warn('Could not save to Firestore:', err);
+                });
+            }
+            localStorage.setItem('dsaTutorialState', JSON.stringify(state));
+        }
+
+        function loadState() {
+            if (stateDocRef) {
+                stateDocRef.get().then(doc => {
+                    if (doc.exists) {
+                        applyTutorialState(doc.data());
+                    } else {
+                        loadTutorialStateFromLocal();
+                    }
+                }).catch(err => {
+                    console.warn('Could not load from Firestore:', err);
+                    loadTutorialStateFromLocal();
+                });
+            } else {
+                loadTutorialStateFromLocal();
+            }
+        }
+
+        function loadTutorialStateFromLocal() {
+            const stateStr = localStorage.getItem('dsaTutorialState');
+            if (stateStr) {
+                try {
+                    const state = JSON.parse(stateStr);
+                    applyTutorialState(state);
+                } catch (e) {
+                    console.error('Error loading state:', e);
+                }
+            }
+        }
+
+        function applyTutorialState(state) {
+            const checkboxes = document.querySelectorAll('.tutorial-checkbox');
+            checkboxes.forEach(cb => {
+                if (state.hasOwnProperty(cb.dataset.tutorialId)) {
+                    cb.checked = !!state[cb.dataset.tutorialId];
+                }
+            });
+            updateProgress();
+        }
+    </script>
+</body>
+</html>
