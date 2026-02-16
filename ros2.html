@@ -1,0 +1,508 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ROS2 Learning Journey</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Firebase App (the core Firebase SDK) -->
+    <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+    <!-- Add Firebase products you want to use -->
+    <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
+    <script>
+      const firebaseConfig = {
+        apiKey: "AIzaSyC_qKkryDOurbuxus53IKD-LZTFTwOcyiA",
+        authDomain: "swift-57396.firebaseapp.com",
+        projectId: "swift-57396",
+        storageBucket: "swift-57396.firebasestorage.app",
+        messagingSenderId: "637513218600",
+        appId: "1:637513218600:web:094f56395070fde52c131d",
+        measurementId: "G-3GY7240XCR"
+      };
+      
+      firebase.initializeApp(firebaseConfig);
+      firebase.auth().setPersistence(firebase.auth.Auth.Persistence.LOCAL);
+    </script>
+    <style>
+        @keyframes wave1 {
+            0% { transform: translateX(0) translateY(0); }
+            50% { transform: translateX(50%) translateY(-20px); }
+            100% { transform: translateX(100%) translateY(0); }
+        }
+        
+        @keyframes wave2 {
+            0% { transform: translateX(0) translateY(0); }
+            50% { transform: translateX(-30%) translateY(15px); }
+            100% { transform: translateX(0) translateY(0); }
+        }
+
+        .wave-background {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            height: 40vh;
+            overflow: hidden;
+            z-index: -1;
+        }
+
+        .wave1 {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            width: 200%;
+            height: 100%;
+            background: linear-gradient(to top, rgba(34, 211, 238, 0.15), rgba(34, 211, 238, 0.05));
+            border-radius: 50% 50% 0 0;
+            animation: wave1 15s linear infinite;
+        }
+
+        .wave2 {
+            position: absolute;
+            bottom: 0;
+            left: -50%;
+            width: 200%;
+            height: 80%;
+            background: linear-gradient(to top, rgba(168, 85, 247, 0.12), rgba(168, 85, 247, 0.04));
+            border-radius: 48% 52% 0 0;
+            animation: wave2 20s linear infinite;
+        }
+
+        .glass-card {
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+
+        .checkbox {
+            transition: all 0.3s ease;
+        }
+
+        .tutorial-card {
+            transition: all 0.3s ease;
+        }
+
+        .progress-bar {
+            overflow: hidden;
+            position: relative;
+        }
+
+        .progress-fill {
+            position: absolute;
+            top: 0;
+            background: linear-gradient(to right, #22d3ee, #a855f7);
+            transition: width 1s ease;
+        }
+
+        .wave-progress {
+            position: absolute;
+            width: 200%;
+            height: 100%;
+            background: linear-gradient(90deg, rgba(255,255,255,0.3) 0%, rgba(255,255,255,0) 50%);
+            animation: progressWave 3s linear infinite;
+        }
+
+        @keyframes progressWave {
+            0% { transform: translateX(-50%); }
+            100% { transform: translateX(0); }
+        }
+    </style>
+</head>
+<body class="min-h-screen bg-gray-900 text-white font-sans">
+    <div class="wave-background">
+        <div class="wave1"></div>
+        <div class="wave2"></div>
+    </div>
+
+    <div class="container mx-auto px-4 py-8 max-w-4xl">
+        <!-- Header -->
+        <div class="glass-card rounded-3xl shadow-lg mb-6 overflow-hidden">
+            <div class="bg-gradient-to-r from-cyan-500/20 to-purple-500/20 p-6">
+                <h1 class="text-2xl md:text-3xl font-bold text-center bg-gradient-to-r from-cyan-400 to-purple-400 bg-clip-text text-transparent">ROS2 Learning Journey</h1>
+                <p class="text-center text-sm mt-2 text-gray-300">57 Tutorials by Kevin Wood | Robotics & AI</p>
+            </div>
+        </div>
+
+        <!-- Progress Section -->
+        <div class="glass-card rounded-3xl shadow-lg mb-6 overflow-hidden">
+            <div class="bg-gradient-to-b from-cyan-500/20 to-purple-500/20 p-6">
+                <div class="flex justify-between items-center mb-4">
+                    <h2 class="text-xl font-semibold">Progress</h2>
+                    <div id="progress-count" class="text-lg font-bold text-cyan-400">0 / 57</div>
+                </div>
+                
+                <div class="progress-bar h-3 rounded-full bg-white/10 mb-4 relative">
+                    <div class="progress-fill rounded-full" id="progress-fill" style="width: 0%">
+                        <div class="wave-progress"></div>
+                    </div>
+                </div>
+                
+                <div id="progress-percent" class="text-sm text-white/80">0% Complete</div>
+            </div>
+        </div>
+
+        <!-- Tutorial List -->
+        <div id="tutorial-list" class="space-y-3">
+            <!-- Tutorial cards will be inserted here -->
+        </div>
+    </div>
+
+    <!-- Notification Toast -->
+    <div id="notification-toast" class="fixed bottom-20 right-4 bg-green-500 text-white px-4 py-2 rounded-lg shadow-lg transform translate-y-10 opacity-0 transition-all duration-300 z-50">
+        <div class="flex items-center">
+            <span id="notification-text"></span>
+        </div>
+    </div>
+
+    <!-- Navigation & Authentication Buttons -->
+    <div class="fixed bottom-4 right-4 z-50 flex flex-col space-y-2">
+        <a href="index.html" class="px-4 py-2 bg-gradient-to-r from-blue-600 to-pink-600 hover:from-blue-500 hover:to-pink-500 text-white rounded-full shadow-lg transition-all hover:scale-105 flex items-center">
+            <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"/>
+            </svg>
+            Swift Tracker
+        </a>
+        <button id="google-signin-btn" class="px-4 py-2 bg-gradient-to-r from-cyan-600 to-blue-600 hover:from-cyan-500 hover:to-blue-500 text-white rounded-full shadow-lg transition-all hover:scale-105 flex items-center">
+            <svg class="w-5 h-5 mr-2" fill="white" viewBox="0 0 24 24" aria-hidden="true">
+                <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4"/>
+                <path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853"/>
+                <path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l3.66-2.84z" fill="#FBBC05"/>
+                <path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335"/>
+            </svg>
+            Sign in
+        </button>
+        <button id="signout-btn" class="px-4 py-2 bg-gray-600 hover:bg-gray-700 text-white rounded-full shadow-lg transition-all hover:scale-105 flex items-center hidden">
+            <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"></path>
+            </svg>
+            Sign out
+        </button>
+    </div>
+
+    <script>
+        // Notification function
+        function showNotification(message, isError = false) {
+            const toast = document.getElementById('notification-toast');
+            const text = document.getElementById('notification-text');
+            
+            text.textContent = message;
+            toast.className = `fixed bottom-20 right-4 ${isError ? 'bg-red-500' : 'bg-green-500'} text-white px-4 py-2 rounded-lg shadow-lg transform translate-y-0 opacity-100 transition-all duration-300 z-50 flex items-center`;
+            
+            setTimeout(() => {
+                toast.className = 'fixed bottom-20 right-4 bg-green-500 text-white px-4 py-2 rounded-lg shadow-lg transform translate-y-10 opacity-0 transition-all duration-300 z-50';
+            }, 3000);
+        }
+
+        // YouTube links for ROS2 playlist
+        const youtubeLinks = [
+            "https://www.youtube.com/watch?v=C6eQ6VwTpxk",
+            "https://www.youtube.com/watch?v=7FKi-waQuMM",
+            "https://www.youtube.com/watch?v=dJLBLb0IXdw",
+            "https://www.youtube.com/watch?v=72a-wJ2k25A",
+            "https://www.youtube.com/watch?v=sWw69pIiMz0",
+            "https://www.youtube.com/watch?v=oVOR74D8A3U",
+            "https://www.youtube.com/watch?v=XAtGm2aBsNU",
+            "https://www.youtube.com/watch?v=nsbgIys0_oc",
+            "https://www.youtube.com/watch?v=PcO-sTuP8zg",
+            "https://www.youtube.com/watch?v=QQLOk8l2lEo",
+            "https://www.youtube.com/watch?v=zNxCqBKKbGM",
+            "https://www.youtube.com/watch?v=JNM2qIhseiU",
+            "https://www.youtube.com/watch?v=9Myw-9UQxPw",
+            "https://www.youtube.com/watch?v=mFCundd5s-Q",
+            "https://www.youtube.com/watch?v=KLvUMtYI_Ag",
+            "https://www.youtube.com/watch?v=4zGUDisw4UI",
+            "https://www.youtube.com/watch?v=rGsyQHwWObA",
+            "https://www.youtube.com/watch?v=lDSrqQM85zA",
+            "https://www.youtube.com/watch?v=EOZNdm00-Cw",
+            "https://www.youtube.com/watch?v=NX_lgA3cDB4",
+            "https://www.youtube.com/watch?v=pT7OtvMdpo8",
+            "https://www.youtube.com/watch?v=BXW3DDD70KA",
+            "https://www.youtube.com/watch?v=rb_jxfI2rwc",
+            "https://www.youtube.com/watch?v=vMgiBxPNIoo",
+            "https://www.youtube.com/watch?v=_A_LRRIxpLg",
+            "https://www.youtube.com/watch?v=8GM6R3zo7iQ",
+            "https://www.youtube.com/watch?v=WWuov6dKXuU",
+            "https://www.youtube.com/watch?v=YQes7T5g-JU",
+            "https://www.youtube.com/watch?v=Ve64pXGkfnA",
+            "https://www.youtube.com/watch?v=wG-0S1D8DiA",
+            "https://www.youtube.com/watch?v=5wObwC9yjUw",
+            "https://www.youtube.com/watch?v=RIOJJDK3iho",
+            "https://www.youtube.com/watch?v=T8KJH47aZ8w",
+            "https://www.youtube.com/watch?v=EZf-1GozbSk",
+            "https://www.youtube.com/watch?v=r8rylSHlsl0",
+            "https://www.youtube.com/watch?v=y5z0PxKr9No",
+            "https://www.youtube.com/watch?v=aL_oM8QhTVI",
+            "https://www.youtube.com/watch?v=CraslJJkrcU",
+            "https://www.youtube.com/watch?v=Y7YINVs5PFM",
+            "https://www.youtube.com/watch?v=gaEEOettwKg",
+            "https://www.youtube.com/watch?v=zfSJ3LRrCqs",
+            "https://www.youtube.com/watch?v=F1BAm6Nf5Ec",
+            "https://www.youtube.com/watch?v=8fzl-45NIb0",
+            "https://www.youtube.com/watch?v=cLBqTCKfzsw",
+            "https://www.youtube.com/watch?v=NHrsftC61i4",
+            "https://www.youtube.com/watch?v=LsKL8N5Iwkw",
+            "https://www.youtube.com/watch?v=DoT3iAgY9Vc",
+            "https://www.youtube.com/watch?v=qWoGkPDg4N8",
+            "https://www.youtube.com/watch?v=PM_1Nb9u-N0",
+            "https://www.youtube.com/watch?v=MnMGjvYxlUk",
+            "https://www.youtube.com/watch?v=_aWJP_M5k8E",
+            "https://www.youtube.com/watch?v=V2s-E2EWwlQ",
+            "https://www.youtube.com/watch?v=Yr3eMqwkEEk",
+            "https://www.youtube.com/watch?v=rWwlGNCMxXo",
+            "https://www.youtube.com/watch?v=ooqBXImjsR4",
+            "https://www.youtube.com/watch?v=Yh0HoGT-9Cc",
+            "https://www.youtube.com/watch?v=IgkjFbAGk6U"
+        ];
+
+        // Tutorial data
+        const tutorials = [
+            { id: 1, title: "ROS2 Using VS Code and WSL", category: "Getting Started", date: "2026-02-16" },
+            { id: 2, title: "ROS2 Setting Up Github In WSL", category: "Getting Started", date: "2026-02-16" },
+            { id: 3, title: "ROS2 Humble Installation", category: "Getting Started", date: "2026-02-16" },
+            { id: 4, title: "ROS2 Command Not Found", category: "Getting Started", date: "2026-02-17" },
+            { id: 5, title: "ROS2 Running Executables", category: "Basics", date: "2026-02-17" },
+            { id: 6, title: "ROS2 GUI Interface using RQt", category: "Basics", date: "2026-02-17" },
+            { id: 7, title: "ROS2 Nodes", category: "Core Concepts", date: "2026-02-18" },
+            { id: 8, title: "ROS2 Topics", category: "Core Concepts", date: "2026-02-18" },
+            { id: 9, title: "ROS2 Services", category: "Core Concepts", date: "2026-02-19" },
+            { id: 10, title: "ROS2 Parameters", category: "Core Concepts", date: "2026-02-19" },
+            { id: 11, title: "ROS2 Actions", category: "Core Concepts", date: "2026-02-20" },
+            { id: 12, title: "ROS2 View Logs", category: "Debugging", date: "2026-02-20" },
+            { id: 13, title: "ROS2 Launch Multiple Nodes", category: "Basics", date: "2026-02-21" },
+            { id: 14, title: "ROS2 Rosbag to Record Data And Playback Data", category: "Tools", date: "2026-02-21" },
+            { id: 15, title: "ROS2 Build Packages With Colcon", category: "Package Management", date: "2026-02-22" },
+            { id: 16, title: "ROS2 Create ROS Package with Colcon", category: "Package Management", date: "2026-02-22" },
+            { id: 17, title: "ROS2 Publisher and Subscriber Package C++", category: "Programming", date: "2026-02-23" },
+            { id: 18, title: "ROS2 Publisher and Subscriber Package Python", category: "Programming", date: "2026-02-23" },
+            { id: 19, title: "ROS2 Server and Client Package C++", category: "Programming", date: "2026-02-24" },
+            { id: 20, title: "ROS2 Server and Client Package Python", category: "Programming", date: "2026-02-24" },
+            { id: 21, title: "ROS2 Custom Interface Package", category: "Advanced", date: "2026-02-25" },
+            { id: 22, title: "ROS2 Integrated Interface Package", category: "Advanced", date: "2026-02-25" },
+            { id: 23, title: "ROS2 Parameters Package C++", category: "Programming", date: "2026-02-26" },
+            { id: 24, title: "ROS2 Parameters Package Python", category: "Programming", date: "2026-02-26" },
+            { id: 25, title: "ROS2 Doctor: ROS Diagnostic and Debug Tool", category: "Debugging", date: "2026-02-27" },
+            { id: 26, title: "ROS2 Plugins", category: "Advanced", date: "2026-02-27" },
+            { id: 27, title: "ROS2 Rosdep", category: "Tools", date: "2026-02-28" },
+            { id: 28, title: "ROS2 Action Package", category: "Advanced", date: "2026-02-28" },
+            { id: 29, title: "ROS2 Action Server Client Package C++", category: "Programming", date: "2026-03-01" },
+            { id: 30, title: "ROS2 Action Server Client Package Python", category: "Programming", date: "2026-03-01" },
+            { id: 31, title: "ROS2 Components", category: "Advanced", date: "2026-03-02" },
+            { id: 32, title: "ROS2 Monitor Parameter Change", category: "Advanced", date: "2026-03-02" },
+            { id: 33, title: "ROS2 Launch File Tutorial - Create a Launch File", category: "Launch Files", date: "2026-03-03" },
+            { id: 34, title: "ROS2 Launch File Tutorial - Integrate Launch File in Package", category: "Launch Files", date: "2026-03-03" },
+            { id: 35, title: "ROS2 Launch File Tutorial - Substitution (Using Launch Arguments)", category: "Launch Files", date: "2026-03-04" },
+            { id: 36, title: "ROS2 Launch File Tutorial - Event Handler (Running Nodes in Specific Order)", category: "Launch Files", date: "2026-03-04" },
+            { id: 37, title: "ROS2 Launch File Tutorial - Large Projects (remapping, namespaces, parameters)", category: "Launch Files", date: "2026-03-05" },
+            { id: 38, title: "ROS2 tf2 Tutorial - Coordinate Frame Transform", category: "tf2 Transforms", date: "2026-03-05" },
+            { id: 39, title: "ROS2 tf2 Tutorial - Static Broadcaster Python", category: "tf2 Transforms", date: "2026-03-06" },
+            { id: 40, title: "ROS2 tf2 Tutorial - Broadcaster Python", category: "tf2 Transforms", date: "2026-03-06" },
+            { id: 41, title: "ROS2 tf2 Tutorial - Listener Python", category: "tf2 Transforms", date: "2026-03-07" },
+            { id: 42, title: "ROS2 tf2 Tutorial - Adding a Frame Python", category: "tf2 Transforms", date: "2026-03-07" },
+            { id: 43, title: "ROS2 tf2 Tutorial - Time Travel Python (Following with Delay)", category: "tf2 Transforms", date: "2026-03-08" },
+            { id: 44, title: "ROS2 Unit Testing with GoogleTest (GTest) C++", category: "Testing", date: "2026-03-08" },
+            { id: 45, title: "ROS2 Unit Testing with Pytest Python", category: "Testing", date: "2026-03-09" },
+            { id: 46, title: "ROS2 URDF Tutorial - Describe Any Robot (Links and Joints)", category: "URDF & Simulation", date: "2026-03-09" },
+            { id: 47, title: "ROS2 URDF Tutorial Xacro Files (Simplify URDF with Xacro Propety and Xacro Macro)", category: "URDF & Simulation", date: "2026-03-10" },
+            { id: 48, title: "ROS2 Rviz2 Tutorial - Robot Simulation", category: "URDF & Simulation", date: "2026-03-10" },
+            { id: 49, title: "ROS2_Control Gazebo Tutorial Robot Simulation (Custom Robot Arm TeslaBot!)", category: "URDF & Simulation", date: "2026-03-11" },
+            { id: 50, title: "ROS2 Plotting Tutorial with PlotJuggler - A Simple Way to Plot in ROS", category: "Tools", date: "2026-03-11" },
+            { id: 51, title: "ROS2 Debugging Tutorial", category: "Debugging", date: "2026-03-12" },
+            { id: 52, title: "ROS2 Advanced Navigation", category: "Advanced", date: "2026-03-12" },
+            { id: 53, title: "ROS2 Computer Vision Integration", category: "Advanced", date: "2026-03-13" },
+            { id: 54, title: "ROS2 Machine Learning", category: "Advanced", date: "2026-03-13" },
+            { id: 55, title: "ROS2 Real Robot Integration", category: "Advanced", date: "2026-03-14" },
+            { id: 56, title: "ROS2 Performance Optimization", category: "Advanced", date: "2026-03-14" },
+            { id: 57, title: "ROS2 Project Deployment", category: "Advanced", date: "2026-03-15" }
+        ];
+
+        // Associate each tutorial with its corresponding YouTube link
+        tutorials.forEach((tutorial, i) => {
+            tutorial.youtubeLink = youtubeLinks[i] || null;
+        });
+
+        // Firebase Authentication
+        const db = firebase.firestore();
+        let stateDocRef = null;
+        let handlersReady = false;
+
+        function getDeviceId() {
+            let id = localStorage.getItem('deviceId_ros2');
+            if (!id) {
+                id = 'device-ros2-' + Math.random().toString(36).substr(2, 16);
+                localStorage.setItem('deviceId_ros2', id);
+            }
+            return id;
+        }
+
+        const auth = firebase.auth();
+        const provider = new firebase.auth.GoogleAuthProvider();
+        provider.addScope('email');
+        provider.addScope('profile');
+        
+        const signInBtn = document.getElementById('google-signin-btn');
+        const signOutBtn = document.getElementById('signout-btn');
+        
+        signInBtn.addEventListener('click', () => {
+            auth.signInWithPopup(provider).catch(err => console.error('Google sign-in error:', err));
+        });
+        
+        signOutBtn.addEventListener('click', () => auth.signOut());
+        
+        auth.onAuthStateChanged(user => {
+            if (user) {
+                signInBtn.classList.add('hidden');
+                signOutBtn.classList.remove('hidden');
+                showNotification('Signed in as ' + (user.displayName || user.email));
+                stateDocRef = db.collection('ros2_tutorials_state').doc(user.uid);
+            } else {
+                signInBtn.classList.remove('hidden');
+                signOutBtn.classList.add('hidden');
+                const deviceId = getDeviceId();
+                stateDocRef = db.collection('ros2_tutorials_state').doc(deviceId);
+            }
+            
+            if (!handlersReady) {
+                setupEventHandlers();
+                handlersReady = true;
+            }
+            
+            loadState();
+            renderTutorialList();
+            updateProgress();
+        });
+
+        function setupEventHandlers() {
+            // Event handlers will be set up after rendering
+        }
+
+        function renderTutorialList() {
+            const listContainer = document.getElementById('tutorial-list');
+            listContainer.innerHTML = '';
+            
+            tutorials.forEach(tutorial => {
+                const card = document.createElement('div');
+                card.className = 'glass-card rounded-2xl p-4 tutorial-card hover:scale-[1.02] cursor-pointer';
+                card.dataset.id = tutorial.id;
+                
+                card.innerHTML = `
+                    <div class="flex items-center justify-between">
+                        <div class="flex items-center flex-1">
+                            <input type="checkbox" 
+                                   class="tutorial-checkbox w-5 h-5 rounded border-2 border-cyan-400 bg-white/10 checked:bg-gradient-to-br checked:from-cyan-400 checked:to-purple-500 cursor-pointer mr-4"
+                                   data-tutorial-id="${tutorial.id}">
+                            <div class="flex-1">
+                                <div class="flex items-center space-x-2">
+                                    <span class="text-sm font-bold text-cyan-400">#${tutorial.id}</span>
+                                    <span class="text-xs px-2 py-0.5 bg-gradient-to-r from-cyan-500/30 to-purple-500/30 rounded-full">${tutorial.category}</span>
+                                </div>
+                                <h3 class="text-lg font-semibold mt-1">${tutorial.title}</h3>
+                            </div>
+                        </div>
+                        ${tutorial.youtubeLink ? `
+                            <a href="${tutorial.youtubeLink}" target="_blank" 
+                               class="ml-4 px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded-lg transition-all hover:scale-105 flex items-center space-x-2"
+                               onclick="event.stopPropagation()">
+                                <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
+                                    <path d="M23.498 6.186a3.016 3.016 0 0 0-2.122-2.136C19.505 3.545 12 3.545 12 3.545s-7.505 0-9.377.505A3.017 3.017 0 0 0 .502 6.186C0 8.07 0 12 0 12s0 3.93.502 5.814a3.016 3.016 0 0 0 2.122 2.136c1.871.505 9.376.505 9.376.505s7.505 0 9.377-.505a3.015 3.015 0 0 0 2.122-2.136C24 15.93 24 12 24 12s0-3.93-.502-5.814zM9.545 15.568V8.432L15.818 12l-6.273 3.568z"/>
+                                </svg>
+                                <span>Watch</span>
+                            </a>
+                        ` : ''}
+                    </div>
+                `;
+                
+                const checkbox = card.querySelector('.tutorial-checkbox');
+                checkbox.addEventListener('change', (e) => {
+                    e.stopPropagation();
+                    toggleCompletion(tutorial.id, e.target.checked);
+                });
+                
+                card.addEventListener('click', (e) => {
+                    if (!e.target.closest('a') && !e.target.closest('input')) {
+                        checkbox.checked = !checkbox.checked;
+                        toggleCompletion(tutorial.id, checkbox.checked);
+                    }
+                });
+                
+                listContainer.appendChild(card);
+            });
+        }
+
+        function toggleCompletion(tutorialId, isChecked) {
+            saveTutorialState();
+            updateProgress();
+            
+            if (isChecked) {
+                showNotification(`✓ Completed tutorial #${tutorialId}`);
+            }
+        }
+
+        function updateProgress() {
+            const checkboxes = document.querySelectorAll('.tutorial-checkbox');
+            const checked = Array.from(checkboxes).filter(cb => cb.checked).length;
+            const total = tutorials.length;
+            const percentage = Math.round((checked / total) * 100);
+            
+            document.getElementById('progress-count').textContent = `${checked} / ${total}`;
+            document.getElementById('progress-percent').textContent = `${percentage}% Complete`;
+            document.getElementById('progress-fill').style.width = `${percentage}%`;
+        }
+
+        function saveTutorialState() {
+            const checkboxes = document.querySelectorAll('.tutorial-checkbox');
+            const state = {};
+            checkboxes.forEach(cb => {
+                state[cb.dataset.tutorialId] = cb.checked;
+            });
+            
+            if (stateDocRef) {
+                stateDocRef.set(state).catch(err => {
+                    console.warn('Could not save to Firestore:', err);
+                });
+            }
+            localStorage.setItem('ros2TutorialState', JSON.stringify(state));
+        }
+
+        function loadState() {
+            if (stateDocRef) {
+                stateDocRef.get().then(doc => {
+                    if (doc.exists) {
+                        applyTutorialState(doc.data());
+                    } else {
+                        loadTutorialStateFromLocal();
+                    }
+                }).catch(err => {
+                    console.warn('Could not load from Firestore:', err);
+                    loadTutorialStateFromLocal();
+                });
+            } else {
+                loadTutorialStateFromLocal();
+            }
+        }
+
+        function loadTutorialStateFromLocal() {
+            const stateStr = localStorage.getItem('ros2TutorialState');
+            if (stateStr) {
+                try {
+                    const state = JSON.parse(stateStr);
+                    applyTutorialState(state);
+                } catch (e) {
+                    console.error('Error loading state:', e);
+                }
+            }
+        }
+
+        function applyTutorialState(state) {
+            const checkboxes = document.querySelectorAll('.tutorial-checkbox');
+            checkboxes.forEach(cb => {
+                if (state.hasOwnProperty(cb.dataset.tutorialId)) {
+                    cb.checked = !!state[cb.dataset.tutorialId];
+                }
+            });
+            updateProgress();
+        }
+    </script>
+</body>
+</html>
