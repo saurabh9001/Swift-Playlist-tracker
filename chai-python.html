@@ -1,0 +1,387 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Chai aur Code Python - Complete Series</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        @keyframes wave {
+            0%, 100% { transform: translateY(0px); }
+            50% { transform: translateY(-20px); }
+        }
+        .wave-bg {
+            background: linear-gradient(135deg, #047857 0%, #059669 50%, #10b981 100%);
+            position: relative;
+            overflow-x: hidden;
+        }
+        .wave-bg::before {
+            content: '';
+            position: absolute;
+            width: 200%;
+            height: 200%;
+            background: radial-gradient(circle, rgba(255,255,255,0.1) 1px, transparent 1px);
+            background-size: 50px 50px;
+            animation: wave 20s linear infinite;
+        }
+        .glass-card {
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+        .progress-bar {
+            transition: width 0.3s ease;
+        }
+        input[type="checkbox"]:checked {
+            background-color: #10b981;
+            border-color: #10b981;
+        }
+        .notification {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            padding: 16px 24px;
+            border-radius: 8px;
+            color: white;
+            font-weight: 500;
+            z-index: 1000;
+            animation: slideIn 0.3s ease;
+        }
+        @keyframes slideIn {
+            from {
+                transform: translateX(400px);
+                opacity: 0;
+            }
+            to {
+                transform: translateX(0);
+                opacity: 1;
+            }
+        }
+        .notification.success {
+            background: linear-gradient(135deg, #10b981 0%, #34d399 100%);
+        }
+        .notification.error {
+            background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+        }
+    </style>
+</head>
+<body class="wave-bg min-h-screen">
+    <!-- Navigation & Authentication Buttons -->
+    <div class="fixed bottom-4 right-4 z-50 flex flex-col space-y-2">
+        <a href="python.html" class="px-4 py-2 bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-500 hover:to-pink-500 text-white rounded-full shadow-lg transition-all hover:scale-105 flex items-center">
+            <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 20l4-16m4 4l4 4-4 4M6 16l-4-4 4-4"/>
+            </svg>
+            Python Tracker
+        </a>
+        <a href="dsa.html" class="px-4 py-2 bg-gradient-to-r from-pink-600 to-purple-600 hover:from-pink-500 hover:to-purple-500 text-white rounded-full shadow-lg transition-all hover:scale-105 flex items-center">
+            <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4"/>
+            </svg>
+            DSA Tracker
+        </a>
+        <a href="ros2.html" class="px-4 py-2 bg-gradient-to-r from-cyan-600 to-purple-600 hover:from-cyan-500 hover:to-purple-500 text-white rounded-full shadow-lg transition-all hover:scale-105 flex items-center">
+            <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 3v2m6-2v2M9 19v2m6-2v2M5 9H3m2 6H3m18-6h-2m2 6h-2M7 19h10a2 2 0 002-2V7a2 2 0 00-2-2H7a2 2 0 00-2 2v10a2 2 0 002 2zM9 9h6v6H9V9z"/>
+            </svg>
+            ROS2 Tracker
+        </a>
+        <a href="index.html" class="px-4 py-2 bg-gradient-to-r from-blue-600 to-pink-600 hover:from-blue-500 hover:to-pink-500 text-white rounded-full shadow-lg transition-all hover:scale-105 flex items-center">
+            <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"/>
+            </svg>
+            Swift Tracker
+        </a>
+        <button id="google-signin-btn" class="px-4 py-2 bg-gradient-to-r from-emerald-600 to-green-600 hover:from-emerald-500 hover:to-green-500 text-white rounded-full shadow-lg transition-all hover:scale-105 flex items-center">
+            <svg class="w-5 h-5 mr-2" fill="white" viewBox="0 0 24 24" aria-hidden="true">
+                <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4"/>
+                <path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853"/>
+                <path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l3.66-2.84z" fill="#FBBC05"/>
+                <path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335"/>
+            </svg>
+            Sign in
+        </button>
+        <button id="signout-btn" class="px-4 py-2 bg-gray-600 hover:bg-gray-700 text-white rounded-full shadow-lg transition-all hover:scale-105 flex items-center hidden">
+            <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"></path>
+            </svg>
+            Sign out
+        </button>
+    </div>
+
+    <div class="container mx-auto px-4 py-8">
+        <!-- Header -->
+        <div class="text-center mb-8">
+            <h1 class="text-5xl font-bold text-white mb-4">☕ Chai aur Code - Python Complete</h1>
+            <p class="text-xl text-white/90">Complete Python for Beginners in Hindi</p>
+            <p class="text-lg text-white/80 mt-2">By Hitesh Choudhary</p>
+        </div>
+
+        <!-- Progress Card -->
+        <div class="glass-card rounded-2xl p-6 mb-8 max-w-2xl mx-auto">
+            <div class="flex justify-between items-center mb-4">
+                <h2 class="text-2xl font-bold text-white">Progress</h2>
+                <span class="text-3xl font-bold text-white" id="progressText">0%</span>
+            </div>
+            <div class="w-full bg-white/20 rounded-full h-4 overflow-hidden">
+                <div class="progress-bar bg-gradient-to-r from-emerald-400 to-green-400 h-full rounded-full" id="progressBar" style="width: 0%"></div>
+            </div>
+            <p class="text-white/80 mt-2 text-center">
+                <span id="completedCount">0</span> of <span id="totalCount">26</span> lessons completed
+            </p>
+        </div>
+
+        <!-- Tutorial List -->
+        <div class="max-w-4xl mx-auto">
+            <div id="tutorialList" class="space-y-4">
+                <!-- Tutorials will be dynamically inserted here -->
+            </div>
+        </div>
+    </div>
+
+    <!-- Firebase Configuration -->
+    <script type="module">
+        import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js';
+        import { getAuth, GoogleAuthProvider, signInWithPopup, signOut, onAuthStateChanged } from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js';
+        import { getFirestore, doc, setDoc, getDoc } from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js';
+
+        const firebaseConfig = {
+            apiKey: "AIzaSyDUe_mEMGRIFJPcAWLPXVxQCROzpqvxv0o",
+            authDomain: "playlist-tracker-4b54c.firebaseapp.com",
+            projectId: "playlist-tracker-4b54c",
+            storageBucket: "playlist-tracker-4b54c.firebasestorage.app",
+            messagingSenderId: "670180080859",
+            appId: "1:670180080859:web:d1d9e5e3b59f5d1957cdfa"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const auth = getAuth(app);
+        const db = getFirestore(app);
+        const provider = new GoogleAuthProvider();
+
+        let currentUser = null;
+        let deviceId = localStorage.getItem('deviceId') || `device_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+        localStorage.setItem('deviceId', deviceId);
+
+        const tutorials = [
+            // Part 1
+            { id: 1, title: "Chai aur Python for Beginners", time: "00:00:00", videoUrl: "https://youtu.be/v9bOWjwdTlg", category: "Part 1 - Introduction", part: 1 },
+            { id: 2, title: "What is the Best Way to Install Python", time: "00:07:49", videoUrl: "https://youtu.be/v9bOWjwdTlg", category: "Part 1 - Getting Started", part: 1 },
+            { id: 3, title: "Python Inner Working", time: "00:27:50", videoUrl: "https://youtu.be/v9bOWjwdTlg", category: "Part 1 - Fundamentals", part: 1 },
+            { id: 4, title: "Python in Shell", time: "00:46:36", videoUrl: "https://youtu.be/v9bOWjwdTlg", category: "Part 1 - Fundamentals", part: 1 },
+            { id: 5, title: "Immutable and Mutable in Python", time: "01:06:40", videoUrl: "https://youtu.be/v9bOWjwdTlg", category: "Part 1 - Fundamentals", part: 1 },
+            { id: 6, title: "Python Data Types - Big Picture", time: "01:23:48", videoUrl: "https://youtu.be/v9bOWjwdTlg", category: "Part 1 - Data Types", part: 1 },
+            { id: 7, title: "Internal Working of Python", time: "01:54:35", videoUrl: "https://youtu.be/v9bOWjwdTlg", category: "Part 1 - Data Types", part: 1 },
+            { id: 8, title: "Numbers in Depth in Python", time: "02:24:54", videoUrl: "https://youtu.be/v9bOWjwdTlg", category: "Part 1 - Data Types", part: 1 },
+            { id: 9, title: "Strings in Python", time: "03:12:43", videoUrl: "https://youtu.be/v9bOWjwdTlg", category: "Part 1 - Data Structures", part: 1 },
+            { id: 10, title: "List in Python", time: "03:43:25", videoUrl: "https://youtu.be/v9bOWjwdTlg", category: "Part 1 - Data Structures", part: 1 },
+            { id: 11, title: "Dictionary in Python", time: "04:15:37", videoUrl: "https://youtu.be/v9bOWjwdTlg", category: "Part 1 - Data Structures", part: 1 },
+            { id: 12, title: "Tuples in Python", time: "04:41:51", videoUrl: "https://youtu.be/v9bOWjwdTlg", category: "Part 1 - Data Structures", part: 1 },
+            { id: 13, title: "Solve 10 Conditional Problems in Python", time: "04:51:32", videoUrl: "https://youtu.be/v9bOWjwdTlg", category: "Part 1 - Control Flow", part: 1 },
+            { id: 14, title: "Solve 10 Loops Problems in Python", time: "05:45:06", videoUrl: "https://youtu.be/v9bOWjwdTlg", category: "Part 1 - Control Flow", part: 1 },
+            { id: 15, title: "Behind the Scene of Loops in Python", time: "06:34:42", videoUrl: "https://youtu.be/v9bOWjwdTlg", category: "Part 1 - Control Flow", part: 1 },
+            { id: 16, title: "Solve 10 Problems on Functions in Python", time: "07:03:47", videoUrl: "https://youtu.be/v9bOWjwdTlg", category: "Part 1 - Functions", part: 1 },
+            { id: 17, title: "Scopes and Closure in Python", time: "08:02:55", videoUrl: "https://youtu.be/v9bOWjwdTlg", category: "Part 1 - Functions", part: 1 },
+            { id: 18, title: "Object Oriented Programming in Python", time: "08:33:47", videoUrl: "https://youtu.be/v9bOWjwdTlg", category: "Part 1 - OOP", part: 1 },
+            { id: 19, title: "What are Decorators in Python", time: "09:42:11", videoUrl: "https://youtu.be/v9bOWjwdTlg", category: "Part 1 - Advanced", part: 1 },
+            
+            // Part 2
+            { id: 20, title: "Python Project - Youtube Manager App", time: "00:00:00", videoUrl: "https://youtu.be/Cri8__uGk-g", category: "Part 2 - Projects", part: 2 },
+            { id: 21, title: "Python Project - Youtube Manager with SQLite3", time: "01:07:32", videoUrl: "https://youtu.be/Cri8__uGk-g", category: "Part 2 - Projects", part: 2 },
+            { id: 22, title: "Handling API in Python", time: "01:40:22", videoUrl: "https://youtu.be/Cri8__uGk-g", category: "Part 2 - API & Database", part: 2 },
+            { id: 23, title: "Python Project - Youtube Manager with MongoDB", time: "02:07:43", videoUrl: "https://youtu.be/Cri8__uGk-g", category: "Part 2 - API & Database", part: 2 },
+            { id: 24, title: "Python Virtual Environment Guide", time: "02:51:36", videoUrl: "https://youtu.be/Cri8__uGk-g", category: "Part 2 - Environment", part: 2 },
+            { id: 25, title: "Explore Open Source Code of Python", time: "03:09:54", videoUrl: "https://youtu.be/Cri8__uGk-g", category: "Part 2 - Advanced", part: 2 },
+            { id: 26, title: "Conda and Jupyter Notebook in Python", time: "03:23:44", videoUrl: "https://youtu.be/Cri8__uGk-g", category: "Part 2 - Tools", part: 2 }
+        ];
+
+        function timeToSeconds(time) {
+            const parts = time.split(':').map(Number);
+            if (parts.length === 3) {
+                return parts[0] * 3600 + parts[1] * 60 + parts[2];
+            }
+            return 0;
+        }
+
+        function renderTutorialList() {
+            const tutorialList = document.getElementById('tutorialList');
+            const groupedByCategory = {};
+
+            tutorials.forEach(tutorial => {
+                if (!groupedByCategory[tutorial.category]) {
+                    groupedByCategory[tutorial.category] = [];
+                }
+                groupedByCategory[tutorial.category].push(tutorial);
+            });
+
+            let html = '';
+            for (const [category, items] of Object.entries(groupedByCategory)) {
+                html += `
+                    <div class="mb-6">
+                        <h3 class="text-2xl font-bold text-white mb-4 flex items-center">
+                            <span class="bg-gradient-to-r from-emerald-400 to-green-400 text-white px-3 py-1 rounded-lg mr-2">${category}</span>
+                        </h3>
+                        <div class="space-y-3">
+                `;
+
+                items.forEach(tutorial => {
+                    const seconds = timeToSeconds(tutorial.time);
+                    const youtubeUrl = `${tutorial.videoUrl}?t=${seconds}s`;
+                    
+                    html += `
+                        <div class="glass-card rounded-xl p-4 flex items-center gap-4 hover:bg-white/20 transition-all">
+                            <input 
+                                type="checkbox" 
+                                id="tutorial-${tutorial.id}" 
+                                class="w-6 h-6 rounded cursor-pointer"
+                                onchange="toggleCompletion(${tutorial.id}, this.checked)"
+                            >
+                            <div class="flex-1">
+                                <div class="flex items-center gap-2 mb-1">
+                                    <span class="text-emerald-300 font-semibold">#${tutorial.id}</span>
+                                    <span class="text-white/60 text-sm">${tutorial.time}</span>
+                                    <span class="text-xs px-2 py-1 bg-white/20 rounded-full text-white">Part ${tutorial.part}</span>
+                                </div>
+                                <h4 class="text-lg font-semibold text-white">${tutorial.title}</h4>
+                            </div>
+                            <a href="${youtubeUrl}" target="_blank" class="bg-gradient-to-r from-emerald-500 to-green-500 text-white px-4 py-2 rounded-lg hover:from-emerald-600 hover:to-green-600 transition-all">
+                                Watch
+                            </a>
+                        </div>
+                    `;
+                });
+
+                html += `
+                        </div>
+                    </div>
+                `;
+            }
+
+            tutorialList.innerHTML = html;
+        }
+
+        window.toggleCompletion = async function(tutorialId, isChecked) {
+            const state = loadState();
+            state[tutorialId] = isChecked;
+            await saveTutorialState(state);
+            updateProgress();
+            showNotification(isChecked ? 'Lesson completed! ☕🎉' : 'Lesson marked as incomplete');
+        };
+
+        function updateProgress() {
+            const state = loadState();
+            const completed = Object.values(state).filter(v => v === true).length;
+            const total = tutorials.length;
+            const percentage = Math.round((completed / total) * 100);
+
+            document.getElementById('progressBar').style.width = `${percentage}%`;
+            document.getElementById('progressText').textContent = `${percentage}%`;
+            document.getElementById('completedCount').textContent = completed;
+            document.getElementById('totalCount').textContent = total;
+        }
+
+        async function saveTutorialState(state) {
+            if (currentUser) {
+                try {
+                    await setDoc(doc(db, 'chai_python_tutorials_state', currentUser.uid), {
+                        state: state,
+                        lastUpdated: new Date().toISOString()
+                    });
+                } catch (error) {
+                    console.error('Error saving to Firestore:', error);
+                }
+            }
+            localStorage.setItem(`chai_python_tutorials_state_${deviceId}`, JSON.stringify(state));
+        }
+
+        async function loadStateFromFirestore() {
+            if (currentUser) {
+                try {
+                    const docSnap = await getDoc(doc(db, 'chai_python_tutorials_state', currentUser.uid));
+                    if (docSnap.exists()) {
+                        return docSnap.data().state;
+                    }
+                } catch (error) {
+                    console.error('Error loading from Firestore:', error);
+                }
+            }
+            return null;
+        }
+
+        function loadState() {
+            const localState = localStorage.getItem(`chai_python_tutorials_state_${deviceId}`);
+            return localState ? JSON.parse(localState) : {};
+        }
+
+        async function applyTutorialState(state) {
+            tutorials.forEach(tutorial => {
+                const checkbox = document.getElementById(`tutorial-${tutorial.id}`);
+                if (checkbox) {
+                    checkbox.checked = state[tutorial.id] || false;
+                }
+            });
+            updateProgress();
+        }
+
+        function showNotification(message, isError = false) {
+            const notification = document.createElement('div');
+            notification.className = `notification ${isError ? 'error' : 'success'}`;
+            notification.textContent = message;
+            document.body.appendChild(notification);
+
+            setTimeout(() => {
+                notification.remove();
+            }, 3000);
+        }
+
+        onAuthStateChanged(auth, async (user) => {
+            const signinBtn = document.getElementById('google-signin-btn');
+            const signoutBtn = document.getElementById('signout-btn');
+
+            if (user) {
+                currentUser = user;
+                signinBtn.classList.add('hidden');
+                signoutBtn.classList.remove('hidden');
+
+                const firestoreState = await loadStateFromFirestore();
+                if (firestoreState) {
+                    await applyTutorialState(firestoreState);
+                    await saveTutorialState(firestoreState);
+                } else {
+                    const localState = loadState();
+                    await saveTutorialState(localState);
+                    await applyTutorialState(localState);
+                }
+            } else {
+                currentUser = null;
+                signinBtn.classList.remove('hidden');
+                signoutBtn.classList.add('hidden');
+                const localState = loadState();
+                await applyTutorialState(localState);
+            }
+        });
+
+        document.getElementById('google-signin-btn').addEventListener('click', async () => {
+            try {
+                await signInWithPopup(auth, provider);
+                showNotification('Signed in successfully! ☕🎉');
+            } catch (error) {
+                showNotification('Error signing in: ' + error.message, true);
+            }
+        });
+
+        document.getElementById('signout-btn').addEventListener('click', async () => {
+            try {
+                await signOut(auth);
+                showNotification('Signed out successfully');
+            } catch (error) {
+                showNotification('Error signing out: ' + error.message, true);
+            }
+        });
+
+        renderTutorialList();
+        const initialState = loadState();
+        applyTutorialState(initialState);
+    </script>
+</body>
+</html>
