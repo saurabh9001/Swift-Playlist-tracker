@@ -1,0 +1,348 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>iOS Bootcamp Tracker - 70+ Hour Course</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        body {
+            background: linear-gradient(135deg, #3d2817 0%, #4a3220 25%, #57402a 50%, #5a4230 75%, #3d2817 100%);
+            background-size: 400% 400%;
+            animation: gradientShift 15s ease infinite;
+            overflow-x: hidden;
+        }
+
+        @keyframes gradientShift {
+            0% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+            100% { background-position: 0% 50%; }
+        }
+
+        .glass-card {
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(15px);
+            border-radius: 20px;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.3);
+        }
+
+        .completed {
+            background: linear-gradient(135deg, rgba(34, 197, 94, 0.3), rgba(34, 197, 94, 0.15));
+        }
+
+        .section-header {
+            background: linear-gradient(135deg, rgba(255, 255, 255, 0.15), rgba(255, 255, 255, 0.05));
+            border-left: 5px solid #8b6f47;
+        }
+
+        .progress-bar {
+            transition: width 0.5s ease;
+            background: linear-gradient(90deg, #8b6f47, #6b5a3d);
+        }
+    </style>
+</head>
+<body class="min-h-screen p-4 md:p-8">
+    <div class="max-w-7xl mx-auto">
+        <!-- Header -->
+        <div class="glass-card p-8 mb-8">
+            <div class="flex justify-between items-center mb-6">
+                <div>
+                    <h1 class="text-5xl font-bold text-white mb-2">📱 iOS Development Bootcamp</h1>
+                    <p class="text-white text-xl">70+ Hours Ultimate Course by Mohammad Azam</p>
+                    <a href="https://www.udemy.com/course/the-ultimate-60-hours-ios-development-bootcamp/learn/" 
+                       target="_blank" 
+                       class="text-white/90 hover:text-white text-sm mt-2 inline-block underline">
+                        🔗 View on Udemy
+                    </a>
+                </div>
+                <div id="auth-section" class="flex gap-4">
+                    <button id="login-btn" class="px-6 py-3 bg-white/30 hover:bg-white/40 text-white rounded-lg font-semibold transition">
+                        🔐 Login with Google
+                    </button>
+                    <div id="user-info" class="hidden items-center gap-4">
+                        <img id="user-photo" class="w-12 h-12 rounded-full border-2 border-white" />
+                        <span id="user-name" class="text-white font-semibold"></span>
+                        <button id="logout-btn" class="px-4 py-2 bg-white/30 hover:bg-white/40 text-white rounded-lg transition">
+                            Logout
+                        </button>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Progress Section -->
+            <div class="bg-white/20 rounded-lg p-4">
+                <div class="flex justify-between text-white mb-2">
+                    <span>Overall Progress</span>
+                    <span id="progress-text">0/99 lessons (0%)</span>
+                </div>
+                <div class="w-full bg-white/30 rounded-full h-4">
+                    <div id="progress-bar" class="progress-bar h-4 rounded-full" style="width: 0%"></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Course Content -->
+        <div id="sections-container" class="space-y-6">
+            <!-- Sections will be dynamically generated -->
+        </div>
+
+        <!-- Navigation -->
+        <div class="fixed bottom-8 right-8 flex flex-col gap-3">
+            <a href="index.html" class="px-6 py-3 bg-white/30 hover:bg-white/50 text-white rounded-full font-semibold transition backdrop-blur-md">
+                🏠 Swift
+            </a>
+            <a href="ros2.html" class="px-6 py-3 bg-white/30 hover:bg-white/50 text-white rounded-full font-semibold transition backdrop-blur-md">
+                🤖 ROS2
+            </a>
+            <a href="dsa.html" class="px-6 py-3 bg-white/30 hover:bg-white/50 text-white rounded-full font-semibold transition backdrop-blur-md">
+                📊 DSA
+            </a>
+            <a href="python.html" class="px-6 py-3 bg-white/30 hover:bg-white/50 text-white rounded-full font-semibold transition backdrop-blur-md">
+                🐍 Python
+            </a>
+            <a href="chai-python.html" class="px-6 py-3 bg-white/30 hover:bg-white/50 text-white rounded-full font-semibold transition backdrop-blur-md">
+                ☕ Chai Python
+            </a>
+        </div>
+    </div>
+
+    <!-- Firebase -->
+    <script type="module">
+        import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js';
+        import { getAuth, GoogleAuthProvider, signInWithPopup, onAuthStateChanged, signOut } from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js';
+        import { getFirestore, doc, setDoc, getDoc } from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js';
+
+        const firebaseConfig = {
+            apiKey: "AIzaSyC9Klsvz5yxDfp51XzCS2fS7xQ3lGG4L64",
+            authDomain: "swift-course-tracker.firebaseapp.com",
+            projectId: "swift-course-tracker",
+            storageBucket: "swift-course-tracker.appspot.com",
+            messagingSenderId: "906521563479",
+            appId: "1:906521563479:web:d39c0f0b68fb30a5e9ddbc"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const auth = getAuth(app);
+        const db = getFirestore(app);
+        const provider = new GoogleAuthProvider();
+
+        let currentUser = null;
+
+        const courseSections = [
+            {
+                title: "Section 1: Introduction",
+                lessons: ["Welcome to the Course", "Course Overview", "Download Required Resources"],
+                duration: "3min"
+            },
+            {
+                title: "Section 2: Swift Fundamentals - Swift Basics",
+                lessons: ["Variables and Constants", "Data Types", "Operators", "String Manipulation"],
+                duration: "26min"
+            },
+            {
+                title: "Section 3: Swift Fundamentals - Control Flow",
+                lessons: ["If-Else Statements", "Switch Statements", "Loops"],
+                duration: "25min"
+            },
+            {
+                title: "Section 4: Swift Fundamentals - Functions and Closures",
+                lessons: ["Functions", "Closures"],
+                duration: "22min"
+            },
+            {
+                title: "Section 5: Swift Fundamentals - Optionals",
+                lessons: ["Understanding Optionals", "Optional Binding", "Optional Chaining", "Nil Coalescing", "Guard Statements"],
+                duration: "26min"
+            },
+            {
+                title: "Section 6: Swift Fundamentals - Generics",
+                lessons: ["Introduction to Generics", "Generic Functions", "Generic Types", "Type Constraints"],
+                duration: "17min"
+            },
+            {
+                title: "Section 7: Swift Fundamentals - Protocols",
+                lessons: ["Protocol Basics", "Protocol Extensions", "Protocol Inheritance", "Protocol Composition"],
+                duration: "19min"
+            },
+            {
+                title: "Section 8: Swift Fundamentals - Enumeration",
+                lessons: ["Enum Basics", "Associated Values", "Raw Values", "Methods in Enums", "Recursive Enums", "Pattern Matching"],
+                duration: "23min"
+            },
+            {
+                title: "Section 9: SwiftUI Fundamentals: Getting Started",
+                lessons: ["Introduction to SwiftUI", "Creating Your First SwiftUI View", "SwiftUI Layouts"],
+                duration: "21min"
+            },
+            {
+                title: "Section 10: SwiftUI Fundamentals: Building List and Navigation",
+                lessons: ["Lists in SwiftUI", "Navigation Links", "Passing Data", "Navigation Stack"],
+                duration: "29min"
+            },
+            {
+                title: "Section 11: SwiftUI Fundamentals: Understanding State and Binding",
+                lessons: ["@State Property Wrapper", "@Binding Property Wrapper", "State Management", "Data Flow", "Environment Objects", "Observable Objects", "Published Properties"],
+                duration: "57min"
+            },
+            {
+                title: "Section 12: SwiftUI Fundamentals: Implementing Weather App Using Web API and MV Pattern",
+                lessons: ["Project Setup", "API Integration", "Model Layer", "View Layer", "Networking", "Error Handling", "UI Design"],
+                duration: "33min"
+            },
+            {
+                title: "Section 13: MV Pattern: Getting Started",
+                lessons: ["Understanding MV Pattern", "Model Layer", "View Layer", "Data Binding", "View Models", "Practical Examples"],
+                duration: "1hr 18min"
+            }
+        ];
+
+        let completedLessons = new Set();
+
+        function renderSections() {
+            const container = document.getElementById('sections-container');
+            container.innerHTML = '';
+            
+            let lessonIndex = 0;
+            
+            courseSections.forEach((section, sectionIndex) => {
+                const sectionDiv = document.createElement('div');
+                sectionDiv.className = 'glass-card p-6';
+                
+                const sectionHeader = document.createElement('div');
+                sectionHeader.className = 'section-header p-4 rounded-lg mb-4';
+                sectionHeader.innerHTML = `
+                    <h2 class="text-2xl font-bold text-white">${section.title}</h2>
+                    <p class="text-white/80 text-sm mt-1">${section.lessons.length} lessons • ${section.duration}</p>
+                `;
+                sectionDiv.appendChild(sectionHeader);
+                
+                section.lessons.forEach((lesson, lessonIdx) => {
+                    const lessonDiv = document.createElement('div');
+                    lessonDiv.className = `p-4 mb-2 rounded-lg transition-all cursor-pointer ${
+                        completedLessons.has(lessonIndex) ? 'completed' : 'bg-white/10 hover:bg-white/20'
+                    }`;
+                    lessonDiv.dataset.index = lessonIndex;
+                    
+                    lessonDiv.innerHTML = `
+                        <div class="flex items-center justify-between">
+                            <div class="flex items-center gap-4">
+                                <input type="checkbox" 
+                                    class="w-6 h-6 rounded accent-green-500" 
+                                    ${completedLessons.has(lessonIndex) ? 'checked' : ''}
+                                    onchange="window.toggleLesson(${lessonIndex})">
+                                <span class="text-white font-medium">${lessonIndex + 1}. ${lesson}</span>
+                            </div>
+                            <span class="text-white/60 text-sm">Lesson ${lessonIdx + 1}/${section.lessons.length}</span>
+                        </div>
+                    `;
+                    
+                    sectionDiv.appendChild(lessonDiv);
+                    lessonIndex++;
+                });
+                
+                container.appendChild(sectionDiv);
+            });
+            
+            updateProgress();
+        }
+
+        function updateProgress() {
+            const totalLessons = courseSections.reduce((sum, section) => sum + section.lessons.length, 0);
+            const completed = completedLessons.size;
+            const percentage = Math.round((completed / totalLessons) * 100);
+            
+            document.getElementById('progress-text').textContent = `${completed}/${totalLessons} lessons (${percentage}%)`;
+            document.getElementById('progress-bar').style.width = `${percentage}%`;
+        }
+
+        async function loadProgress() {
+            if (!currentUser) {
+                const saved = localStorage.getItem('ios_udemy_progress');
+                if (saved) {
+                    completedLessons = new Set(JSON.parse(saved));
+                }
+                renderSections();
+                return;
+            }
+
+            try {
+                const docRef = doc(db, 'ios_udemy_state', currentUser.uid);
+                const docSnap = await getDoc(docRef);
+                
+                if (docSnap.exists()) {
+                    completedLessons = new Set(docSnap.data().completed || []);
+                }
+                renderSections();
+            } catch (error) {
+                console.error('Error loading progress:', error);
+                renderSections();
+            }
+        }
+
+        async function saveProgress() {
+            const progressArray = Array.from(completedLessons);
+            
+            localStorage.setItem('ios_udemy_progress', JSON.stringify(progressArray));
+            
+            if (currentUser) {
+                try {
+                    await setDoc(doc(db, 'ios_udemy_state', currentUser.uid), {
+                        completed: progressArray,
+                        lastUpdated: new Date().toISOString()
+                    });
+                } catch (error) {
+                    console.error('Error saving to Firebase:', error);
+                }
+            }
+        }
+
+        window.toggleLesson = async function(index) {
+            if (completedLessons.has(index)) {
+                completedLessons.delete(index);
+            } else {
+                completedLessons.add(index);
+            }
+            await saveProgress();
+            renderSections();
+        };
+
+        document.getElementById('login-btn').addEventListener('click', async () => {
+            try {
+                const result = await signInWithPopup(auth, provider);
+                console.log('Logged in:', result.user.displayName);
+            } catch (error) {
+                console.error('Login error:', error);
+            }
+        });
+
+        document.getElementById('logout-btn').addEventListener('click', async () => {
+            try {
+                await signOut(auth);
+            } catch (error) {
+                console.error('Logout error:', error);
+            }
+        });
+
+        onAuthStateChanged(auth, (user) => {
+            currentUser = user;
+            
+            if (user) {
+                document.getElementById('login-btn').classList.add('hidden');
+                document.getElementById('user-info').classList.remove('hidden');
+                document.getElementById('user-info').classList.add('flex');
+                document.getElementById('user-photo').src = user.photoURL;
+                document.getElementById('user-name').textContent = user.displayName;
+                loadProgress();
+            } else {
+                document.getElementById('login-btn').classList.remove('hidden');
+                document.getElementById('user-info').classList.add('hidden');
+                document.getElementById('user-info').classList.remove('flex');
+                loadProgress();
+            }
+        });
+
+        renderSections();
+    </script>
+</body>
+</html>
